@@ -8,6 +8,8 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.sql.*;
 import org.json.JSONObject;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 public class RFIDListener {
     private static final String PORT_NAME = "COM10";
@@ -15,26 +17,96 @@ public class RFIDListener {
     private static final String DB_URL = "jdbc:mysql://localhost:3306/entrysense";
     private static final String DB_USER = "root";
     private static final String DB_PASS = "";
+    private static final int CONTROL_PORT = 9090;
 
     private static Connection dbConnection;
     private static SerialPort serialPort;
+    private static boolean isRunning = true;
 
     public static void main(String[] args) {
         System.out.println("🚀 RFID Listener Starting...");
+        
+        // Start gate control server in a separate thread
+        Thread gateControlThread = new Thread(() -> startGateControlServer());
+        gateControlThread.setDaemon(true);
+        gateControlThread.start();
 
-        // Auto-restart loop
-        while (true) {
+        // Auto-restart loop for RFID functionality
+        while (isRunning) {
             try {
                 initializeSystem();
                 startRFIDListening();
             } catch (Exception e) {
                 System.err.println("❌ System crash: " + e.getMessage());
                 cleanup();
-                waitForRestart();
+                if (isRunning) {
+                    waitForRestart();
+                }
             }
+        }
+        
+        System.out.println("🛑 RFID Listener stopped gracefully");
+    }
+
+    // ===== GATE CONTROL SERVER =====
+    private static void startGateControlServer() {
+        try (ServerSocket serverSocket = new ServerSocket(CONTROL_PORT)) {
+            System.out.println("🎮 Gate Control Server started on port " + CONTROL_PORT);
+            
+            while (isRunning) {
+                try (Socket clientSocket = serverSocket.accept();
+                     BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                     OutputStream out = clientSocket.getOutputStream()) {
+                    
+                    String command = in.readLine();
+                    if (command != null) {
+                        System.out.println("🎮 Received gate command: " + command);
+                        
+                        if ("OPEN".equalsIgnoreCase(command)) {
+                            // MANUAL OPEN - Send different command for manual control (no auto-close)
+                            sendGateCommand("Access Granted Manual\n");
+                            out.write("SUCCESS: Gate opened (manual control)\n".getBytes());
+                            System.out.println("🎮 MANUAL OPEN: Sent 'Access Granted Manual' to Arduino - NO AUTO-CLOSE");
+                        } else if ("CLOSE".equalsIgnoreCase(command)) {
+                            sendGateCommand("Access Denied\n");
+                            out.write("SUCCESS: Gate closed\n".getBytes());
+                            System.out.println("🎮 MANUAL CLOSE: Sent 'Access Denied' to Arduino");
+                        } else if ("STOP".equalsIgnoreCase(command)) {
+                            isRunning = false;
+                            out.write("SUCCESS: Listener stopping\n".getBytes());
+                        } else if ("STATUS".equalsIgnoreCase(command)) {
+                            out.write("SUCCESS: RFID Listener running with gate control\n".getBytes());
+                        } else {
+                            out.write("ERROR: Unknown command\n".getBytes());
+                        }
+                    }
+                } catch (Exception e) {
+                    if (isRunning) {
+                        System.err.println("🎮 Gate control error: " + e.getMessage());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("🎮 Failed to start gate control server: " + e.getMessage());
         }
     }
 
+    private static void sendGateCommand(String command) {
+        try {
+            if (serialPort != null && serialPort.isOpen()) {
+                OutputStream outputStream = serialPort.getOutputStream();
+                outputStream.write(command.getBytes());
+                outputStream.flush();
+                System.out.println("🎮 Sent to Arduino: " + command.trim());
+            } else {
+                System.err.println("🎮 Serial port not available for gate control");
+            }
+        } catch (Exception e) {
+            System.err.println("🎮 Error sending gate command: " + e.getMessage());
+        }
+    }
+
+    // ===== RFID METHODS =====
     private static void initializeSystem() throws Exception {
         // Initialize Serial Port
         serialPort = SerialPort.getCommPort(PORT_NAME);
@@ -58,7 +130,7 @@ public class RFIDListener {
 
         System.out.println("🔍 Listening for RFID scans...");
 
-        while (true) {
+        while (isRunning) {
             if (in.available() > 0) {
                 char c = (char) in.read();
                 if (c == '\n') {
@@ -75,7 +147,7 @@ public class RFIDListener {
                     buffer.append(c);
                 }
             }
-            Thread.sleep(10); // Small delay to prevent CPU overuse
+            Thread.sleep(5);
         }
     }
 
@@ -88,7 +160,7 @@ public class RFIDListener {
             JSONObject response = new JSONObject();
             JSONObject details = new JSONObject();
 
-            // 🔍 Lookup RFID info - REMOVED is_enabled condition
+            // Lookup RFID info
             String query = "SELECT * FROM rfid_info WHERE rfid_uid = ?";
             PreparedStatement stmt = dbConnection.prepareStatement(query);
             stmt.setString(1, rfidUid);
@@ -137,25 +209,6 @@ public class RFIDListener {
                         department = employeeRs.getString("department");
                         photo = employeeRs.getString("photo");
                     }
-                } else if (role.equals("guest")) {
-                    String guestQuery = """
-                                SELECT g.guest_id, g.first_name, g.middle_name, g.last_name,
-                                       g.purpose AS department, g.photo
-                                FROM rfid_guest_info rgi
-                                JOIN guest g ON g.guest_id = rgi.guest_id
-                                WHERE rgi.rfid_id = ?
-                            """;
-                    PreparedStatement ps = dbConnection.prepareStatement(guestQuery);
-                    ps.setInt(1, rfid_id);
-                    ResultSet guestRs = ps.executeQuery();
-                    if (guestRs.next()) {
-                        idNumber = guestRs.getString("guest_id");
-                        name = formatName(guestRs.getString("first_name"),
-                                guestRs.getString("middle_name"),
-                                guestRs.getString("last_name"));
-                        department = guestRs.getString("department");
-                        photo = guestRs.getString("photo");
-                    }
                 }
 
                 // Debug photo data
@@ -171,11 +224,11 @@ public class RFIDListener {
                 details.put("photo", photo != null ? photo : "");
                 details.put("status", "Access Granted");
 
-                // Send to Arduino
+                // Send to Arduino - RFID OPEN (5 seconds auto-close)
                 response.put("status", "Access Granted");
                 response.put("details", details);
                 System.out.println("✅ Access Granted: " + response.toString(2));
-                serialPort.getOutputStream().write("Access Granted\n".getBytes());
+                sendGateCommand("Access Granted\n"); // RFID command - 5 seconds auto-close
 
                 // Log the access to database
                 logAccess(rfidUid, role, "Access Granted", idNumber, name.trim());
@@ -189,7 +242,7 @@ public class RFIDListener {
                 System.out.println("🔴 RFID UID that triggered denial: " + rfidUid);
 
                 // Send to Arduino
-                serialPort.getOutputStream().write("Access Denied\n".getBytes());
+                sendGateCommand("Access Denied\n");
                 System.out.println("❌ Access Denied for unknown RFID: " + rfidUid);
 
                 // Use NULL for role since it's not applicable for denied access
@@ -199,7 +252,7 @@ public class RFIDListener {
                 System.out.println("📝 Calling logAccess for denied RFID...");
                 logAccess(rfidUid, deniedRole, "Access Denied", "UNKNOWN", "Unknown User");
 
-                // Notify PHP of denied access (still use "unknown" for PHP)
+                // Notify PHP of denied access
                 System.out.println("🌐 Calling sendToPHP for denied RFID...");
                 sendToPHP("UNKNOWN", "Unknown User", "Access Denied", "unknown", "Access Denied", "");
 

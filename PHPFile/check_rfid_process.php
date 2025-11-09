@@ -1,48 +1,36 @@
 <?php
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+
+$response = ['success' => false, 'rfidRunning' => false, 'message' => ''];
 
 try {
-    $isRunning = false;
-    $processInfo = [];
+    // Method 1: Check if gate control server is responding
+    $socket = @fsockopen('127.0.0.1', 9090, $errno, $errstr, 3);
     
-    if (function_exists('shell_exec')) {
-        // Check for Java processes
-        $output = shell_exec('tasklist /FI "IMAGENAME eq java.exe" /FO CSV 2>nul');
+    if ($socket) {
+        fwrite($socket, "STATUS\n");
+        $responseText = fread($socket, 1024);
+        fclose($socket);
         
-        if (strpos($output, 'java.exe') !== false) {
-            // Get detailed process information
-            $output = shell_exec('wmic process where "name=\'java.exe\'" get ProcessId,CommandLine /format:csv 2>nul');
-            
-            $lines = explode("\n", trim($output));
-            foreach ($lines as $line) {
-                if (strpos($line, 'RFIDListener') !== false) {
-                    $isRunning = true;
-                    $parts = explode(',', $line);
-                    if (count($parts) >= 3) {
-                        $processInfo = [
-                            'process_id' => $parts[1] ?? 'unknown',
-                            'command_line' => $parts[2] ?? 'unknown',
-                            'detected' => true
-                        ];
-                    }
-                    break;
-                }
-            }
+        if (strpos($responseText, 'SUCCESS') !== false) {
+            $response['success'] = true;
+            $response['rfidRunning'] = true;
+            $response['message'] = 'RFID Listener with gate control is running';
         }
+    } else {
+        // Method 2: Check Java process
+        $processCheck = shell_exec('tasklist /FI "IMAGENAME eq java.exe" 2>&1');
+        $javaRunning = strpos($processCheck, 'java.exe') !== false;
+        
+        $response['success'] = true;
+        $response['rfidRunning'] = $javaRunning;
+        $response['message'] = $javaRunning ? 'Java process running' : 'No Java process found';
+        $response['method'] = 'process_check';
     }
     
-    echo json_encode([
-        'isRunning' => $isRunning,
-        'processInfo' => $processInfo,
-        'timestamp' => date('Y-m-d H:i:s')
-    ]);
-    
 } catch (Exception $e) {
-    echo json_encode([
-        'isRunning' => false,
-        'error' => $e->getMessage(),
-        'timestamp' => date('Y-m-d H:i:s')
-    ]);
+    $response['message'] = $e->getMessage();
 }
+
+echo json_encode($response);
 ?>
