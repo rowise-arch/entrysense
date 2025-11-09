@@ -1,0 +1,562 @@
+/* Entry Monitor Specific Styles */
+.main-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding-top: 20px;
+}
+
+/* Current Scan Panel */
+.monitor-card {
+    width: 100%;
+    max-width: none;
+    margin: 0 auto 30px;
+    padding: 40px;
+    text-align: center;
+    position: relative;
+}
+
+.scan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 35px;
+    padding-bottom: 25px;
+    border-bottom: 2px solid rgba(226, 232, 240, 0.8);
+}
+
+.scan-header h3 {
+    color: var(--primary-dark-blue);
+    font-size: 1.6rem;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin: 0;
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.scan-time {
+    color: #718096;
+    font-weight: 600;
+    background: rgba(226, 232, 240, 0.8);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 1rem;
+}
+
+.btn-fullscreen {
+    background: rgba(66, 153, 225, 0.1);
+    color: var(--primary-blue);
+    border: 2px solid var(--primary-blue);
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+.btn-fullscreen:hover {
+    background: var(--primary-blue);
+    color: white;
+    transform: scale(1.1);
+}
+
+.btn-fullscreen.active {
+    background: var(--primary-blue);
+    color: white;
+}
+
+/* More precise vertical positioning */
+.monitor-card:fullscreen {
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* Start from top instead of center */
+    padding: 60px;
+    padding-top: 100px; /* Add more top padding to push everything down */
+}
+
+.monitor-card:fullscreen .scan-content {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 80px;
+    transform: scale(1.2);
+    transition: transform 0.3s ease;
+}
+
+.monitor-card:fullscreen .photo-section {
+    flex: 0 0 auto;
+    margin-right: 20px;
+    padding-top: 80px;
+    padding-left: 20px; /* Fine-tune photo vertical position */
+}
+
+.monitor-card:fullscreen .photo-box {
+    width: 280px;
+    height: 280px;
+}
+
+.monitor-card:fullscreen .details-section {
+    flex: 1;
+    max-width: 600px;
+    padding-top: 40px; /* Push details section down relative to photo */
+}
+
+.monitor-card:fullscreen .details {
+    margin-top: 20px; /* Additional margin inside details */
+}
+
+.monitor-card:fullscreen .access-indicator {
+    width: 65px;
+    height: 65px;
+    font-size: 1.8rem;
+    bottom: 20px;
+    right: 20px;
+}
+
+.monitor-card:fullscreen .detail-row strong {
+    font-size: 1.3rem;
+}
+
+.monitor-card:fullscreen .detail-row span {
+    font-size: 1.2rem;
+}
+
+.monitor-card:fullscreen .status {
+    font-size: 1.5rem;
+    padding: 20px 40px;
+    margin-top: 25px; /* More space above status */
+}
+
+.monitor-card:fullscreen .last-update {
+    font-size: 1.2rem;
+    padding: 18px 35px;
+    margin-top: 35px; /* More space above last update */
+}
+
+/* Main content area with side-by-side layout */
+.scan-content {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 40px;
+    align-items: center;
+}
+
+.photo-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.photo-box {
+    width: 250px;
+    height: 250px;
+    margin: 0 auto 25px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #cbd5e0, #e2e8f0);
+    border: 6px solid white;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+    background-size: 70%;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 200px;
+}
+
+.user-photo {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+}
+
+.access-indicator {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.4rem;
+    background: #a0aec0;
+    border: 4px solid white;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.access-indicator.granted {
+    background: #48bb78;
+    animation: pulse 2s infinite;
+}
+
+.access-indicator.denied {
+    background: #f56565;
+    animation: pulse 2s infinite;
+}
+
+.access-indicator.pulse {
+    animation: pulse 0.5s ease-in-out 3;
+}
+
+/* Details section takes more space */
+.details-section {
+    text-align: left;
+}
+
+.details {
+    background: rgba(247, 250, 252, 0.8);
+    padding: 35px;
+    border-radius: var(--radius);
+    margin-bottom: 25px;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 25px;
+}
+
+.detail-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 12px;
+    border-left: 4px solid var(--primary-blue);
+}
+
+.detail-row strong {
+    color: #4a5568;
+    font-weight: 600;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.detail-row span {
+    color: #2d3748;
+    font-weight: 500;
+    font-size: 1.1rem;
+    padding-left: 24px;
+}
+
+.status-container {
+    grid-column: 1 / -1;
+    text-align: center;
+    margin-top: 15px;
+}
+
+.status {
+    display: inline-block;
+    padding: 15px 30px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 1.3rem;
+    min-width: 200px;
+}
+
+.status-granted {
+    color: #38a169;
+    background: rgba(72, 187, 120, 0.15);
+    border: 3px solid rgba(72, 187, 120, 0.3);
+}
+
+.status-denied {
+    color: #e53e3e;
+    background: rgba(245, 101, 101, 0.15);
+    border: 3px solid rgba(245, 101, 101, 0.3);
+}
+
+.flash {
+    animation: flash 0.3s alternate 6;
+}
+
+@keyframes flash {
+    from { transform: scale(1); opacity: 1; }
+    to { transform: scale(1.05); opacity: 0.7; }
+}
+
+.last-update {
+    margin: 25px 0;
+    font-size: 1.1rem;
+    color: #4a5568;
+    background: rgba(255,255,255,0.8);
+    padding: 15px 30px;
+    border-radius: 25px;
+    display: inline-block;
+}
+
+.scan-indicator {
+    width: 16px;
+    height: 16px;
+    background: #48bb78;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 15px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(0.9); opacity: 0.7; }
+    50% { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(0.9); opacity: 0.7; }
+}
+
+/* Recent Activity Section */
+.recent-activity {
+    width: 100%;
+    max-width: none;
+    margin: 0 auto 30px;
+    padding: 35px;
+}
+
+.activity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid rgba(226, 232, 240, 0.8);
+}
+
+.activity-header h3 {
+    color: var(--primary-dark-blue);
+    font-size: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+}
+
+.activity-stats {
+    display: flex;
+    gap: 15px;
+}
+
+.stat {
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.stat.granted {
+    background: rgba(72, 187, 120, 0.15);
+    color: #38a169;
+}
+
+.stat.denied {
+    background: rgba(245, 101, 101, 0.15);
+    color: #e53e3e;
+}
+
+.activity-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #718096;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    color: #cbd5e0;
+}
+
+.empty-state p {
+    color: #4a5568;
+    margin-bottom: 10px;
+    font-weight: 600;
+    font-size: 1.2rem;
+}
+
+.empty-state span {
+    color: #a0aec0;
+    font-size: 1rem;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    margin-bottom: 15px;
+    border-radius: 15px;
+    background: rgba(247, 250, 252, 0.8);
+    transition: all 0.3s ease;
+}
+
+.activity-item:hover {
+    background: rgba(237, 242, 247, 0.9);
+    transform: translateX(5px);
+}
+
+.activity-item.granted {
+    border-left: 5px solid #48bb78;
+}
+
+.activity-item.denied {
+    border-left: 5px solid #f56565;
+}
+
+.activity-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+}
+
+.activity-item.granted .activity-icon {
+    background: #48bb78;
+}
+
+.activity-item.denied .activity-icon {
+    background: #f56565;
+}
+
+.activity-details {
+    flex: 1;
+}
+
+.activity-name {
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 8px;
+    font-size: 1.1rem;
+}
+
+.activity-meta {
+    display: flex;
+    gap: 20px;
+    font-size: 0.95rem;
+}
+
+.activity-id {
+    color: var(--primary-blue);
+    font-weight: 500;
+}
+
+.activity-dept {
+    color: #718096;
+}
+
+.activity-role {
+    color: #718096;
+    text-transform: capitalize;
+}
+
+.activity-time {
+    color: #a0aec0;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .scan-content {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    
+    .photo-section {
+        order: -1;
+    }
+    
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .monitor-card,
+    .recent-activity {
+        padding: 25px;
+        margin: 0 auto 25px;
+    }
+    
+    .scan-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    .header-controls {
+        align-self: stretch;
+        justify-content: space-between;
+    }
+    
+    .activity-header {
+        flex-direction: column;
+        gap: 15px;
+        align-items: flex-start;
+    }
+    
+    .activity-stats {
+        align-self: stretch;
+        justify-content: space-between;
+    }
+    
+    
+    .details {
+        padding: 25px;
+    }
+    
+    .activity-item {
+        padding: 15px;
+        gap: 15px;
+    }
+    
+    .activity-meta {
+        flex-direction: column;
+        gap: 5px;
+    }
+}
+
+@media (max-width: 480px) {
+    .monitor-card,
+    .recent-activity {
+        padding: 20px;
+    }
+    
+    .photo-box {
+        width: 150px;
+        height: 150px;
+    }
+    
+    .access-indicator {
+        width: 45px;
+        height: 45px;
+        font-size: 1.2rem;
+    }
+    
+    .details {
+        padding: 20px;
+    }
+    
+    .detail-row {
+        padding: 12px;
+    }
+}

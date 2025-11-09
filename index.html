@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSU Security Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .splash-container {
+            text-align: center;
+            color: white;
+            z-index: 10;
+            position: relative;
+        }
+
+        .logo-container {
+            margin-bottom: 30px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .logo {
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo img {
+            width: 80px;
+            height: 80px;
+            filter: brightness(0) invert(1);
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(45deg, #fff, #e3f2fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 40px;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        .loading-bar {
+            width: 300px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            margin: 0 auto;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .loading-progress {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #38a169);
+            border-radius: 10px;
+            animation: loading 3s ease-in-out forwards;
+        }
+
+        .loading-percentage {
+            position: absolute;
+            top: -25px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .status-text {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+            font-weight: 300;
+            min-height: 20px;
+        }
+
+        .features {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 50px;
+            opacity: 0;
+            animation: fadeIn 0.5s ease-in-out 1.5s forwards;
+        }
+
+        .feature {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 15px;
+            width: 120px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .feature:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .feature span {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+        .system-info {
+            margin-top: 30px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 0.8rem;
+            opacity: 0.7;
+            max-width: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+            display: inline-block;
+        }
+
+        .status-connecting { background-color: #ed8936; animation: pulse 1s infinite; }
+        .status-connected { background-color: #48bb78; }
+        .status-error { background-color: #f56565; }
+        .status-warning { background-color: #ed8936; }
+
+        .skip-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .skip-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Background animation */
+        .bg-bubbles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .bg-bubbles li {
+            position: absolute;
+            list-style: none;
+            display: block;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.1);
+            bottom: -160px;
+            animation: square 20s infinite;
+            transition-timing-function: linear;
+            border-radius: 50%;
+        }
+
+        .bg-bubbles li:nth-child(1) { left: 10%; }
+        .bg-bubbles li:nth-child(2) { left: 20%; width: 80px; height: 80px; animation-delay: 2s; animation-duration: 17s; }
+        .bg-bubbles li:nth-child(3) { left: 25%; animation-delay: 4s; }
+        .bg-bubbles li:nth-child(4) { left: 40%; width: 60px; height: 60px; animation-duration: 22s; }
+        .bg-bubbles li:nth-child(5) { left: 70%; }
+        .bg-bubbles li:nth-child(6) { left: 80%; width: 120px; height: 120px; animation-delay: 3s; animation-duration: 25s; }
+        .bg-bubbles li:nth-child(7) { left: 32%; width: 160px; height: 160px; animation-delay: 7s; }
+        .bg-bubbles li:nth-child(8) { left: 55%; width: 20px; height: 20px; animation-delay: 15s; animation-duration: 40s; }
+        .bg-bubbles li:nth-child(9) { left: 25%; width: 10px; height: 10px; animation-delay: 2s; animation-duration: 40s; }
+        .bg-bubbles li:nth-child(10) { left: 90%; width: 160px; height: 160px; animation-delay: 11s; }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes loading {
+            0% { width: 0%; }
+            25% { width: 30%; }
+            50% { width: 60%; }
+            75% { width: 85%; }
+            100% { width: 100%; }
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        @keyframes square {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-1000px) rotate(600deg); opacity: 0; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            .subtitle { font-size: 1rem; }
+            .features { flex-direction: column; align-items: center; gap: 15px; }
+            .feature { width: 200px; }
+            .loading-bar { width: 250px; }
+            .system-info { max-width: 350px; }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+<body>
+    <!-- Animated Background -->
+    <ul class="bg-bubbles">
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+    </ul>
+
+    <!-- Skip Button -->
+    <button class="skip-btn" id="skipBtn">
+        <i class="fas fa-forward"></i> Skip
+    </button>
+
+    <!-- Main Content -->
+    <div class="splash-container">
+        <div class="logo-container">
+            <div class="logo">
+                <img src="Assets/rsulogo.png" alt="RSU Logo" onerror="this.style.display='none'">
+            </div>
+            <h1>RSU Security</h1>
+            <div class="subtitle">RFID Access Control System</div>
+        </div>
+
+        <div class="loading-bar">
+            <div class="loading-progress"></div>
+            <div class="loading-percentage" id="loadingPercentage">0%</div>
+        </div>
+        <div class="status-text" id="statusText">Initializing System...</div>
+
+        <div class="features">
+            <div class="feature">
+                <i class="fas fa-id-card"></i>
+                <span>RFID Access</span>
+            </div>
+            <div class="feature">
+                <i class="fas fa-shield-alt"></i>
+                <span>Security</span>
+            </div>
+            <div class="feature">
+                <i class="fas fa-chart-line"></i>
+                <span>Analytics</span>
+            </div>
+            <div class="feature">
+                <i class="fas fa-database"></i>
+                <span>Database</span>
+            </div>
+        </div>
+
+        <div class="system-info">
+            <div class="status-item">
+                <span>Database Connection:</span>
+                <span>
+                    <span class="status-indicator" id="dbIndicator"></span>
+                    <span id="dbStatus">Checking...</span>
+                </span>
+            </div>
+            <div class="status-item">
+                <span>RFID Listener:</span>
+                <span>
+                    <span class="status-indicator" id="rfidIndicator"></span>
+                    <span id="rfidStatus">Checking...</span>
+                </span>
+            </div>
+            <div class="status-item">
+                <span>System API:</span>
+                <span>
+                    <span class="status-indicator" id="apiIndicator"></span>
+                    <span id="apiStatus">Checking...</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            CHECK_INTERVAL: 1500, // Slower for better timing
+            RFID_TIMEOUT: 600000, // 10 minutes (more generous)
+            AUTO_START_RFID: true,
+            REDIRECT_DELAY: 2000,
+            STATUS_MESSAGES: [
+                "Initializing System...",
+                "Checking Database Connection...",
+                "Starting RFID Listener...",
+                "Testing System APIs...",
+                "Finalizing Setup...",
+                "System Ready - Redirecting to Login"
+            ]
+        };
+
+        // State variables
+        let currentStatus = 0;
+        let statusInterval;
+        let systemChecksComplete = false;
+
+        // DOM Elements
+        const statusElement = document.getElementById('statusText');
+        const loadingPercentage = document.getElementById('loadingPercentage');
+        const skipBtn = document.getElementById('skipBtn');
+        const rfidStatusElement = document.getElementById('rfidStatus');
+        const rfidIndicator = document.getElementById('rfidIndicator');
+        const dbStatusElement = document.getElementById('dbStatus');
+        const dbIndicator = document.getElementById('dbIndicator');
+        const apiStatusElement = document.getElementById('apiStatus');
+        const apiIndicator = document.getElementById('apiIndicator');
+
+        // Status Manager Class
+        class StatusManager {
+            constructor() {
+                this.checks = [];
+                this.maxRetries = 2;
+            }
+            
+            addCheck(name, checkFunction) {
+                this.checks.push({ name, func: checkFunction, retries: 0 });
+            }
+            
+            async performChecks() {
+                const results = {};
+                
+                for (let check of this.checks) {
+                    try {
+                        results[check.name] = await this.executeWithRetry(check);
+                    } catch (error) {
+                        results[check.name] = { success: false, error: error.message };
+                    }
+                }
+                
+                return results;
+            }
+            
+            async executeWithRetry(check) {
+                try {
+                    const result = await check.func();
+                    return { success: true, data: result };
+                } catch (error) {
+                    if (check.retries < this.maxRetries) {
+                        check.retries++;
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        return await this.executeWithRetry(check);
+                    }
+                    throw error;
+                }
+            }
+        }
+
+        // Initialize Status Manager
+        const statusManager = new StatusManager();
+        statusManager.addCheck('Database', checkDatabaseConnection);
+        statusManager.addCheck('RFID', checkRFIDListener);
+        statusManager.addCheck('API', checkSystemAPI);
+
+        // Update progress percentage
+        function updateProgress(percentage) {
+            if (loadingPercentage) {
+                loadingPercentage.textContent = `${percentage}%`;
+            }
+        }
+
+        // Update status indicator
+        function updateStatus(indicator, statusElement, status, message) {
+            indicator.className = 'status-indicator';
+            statusElement.textContent = message;
+            
+            switch(status) {
+                case 'connecting':
+                    indicator.classList.add('status-connecting');
+                    break;
+                case 'connected':
+                    indicator.classList.add('status-connected');
+                    break;
+                case 'error':
+                    indicator.classList.add('status-error');
+                    break;
+                case 'warning':
+                    indicator.classList.add('status-warning');
+                    break;
+            }
+        }
+
+        // Check database connection
+        async function checkDatabaseConnection() {
+            updateStatus(dbIndicator, dbStatusElement, 'connecting', 'Testing connection...');
+            
+            try {
+                const response = await fetch('test_pdo.php', {
+                    method: 'GET',
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.text();
+                    if (data.includes('success') || data.includes('Connected')) {
+                        updateStatus(dbIndicator, dbStatusElement, 'connected', 'Connected');
+                        return true;
+                    } else {
+                        updateStatus(dbIndicator, dbStatusElement, 'warning', 'Connected (No data)');
+                        return true;
+                    }
+                } else {
+                    throw new Error('HTTP ' + response.status);
+                }
+            } catch (error) {
+                console.error('Database check failed:', error);
+                updateStatus(dbIndicator, dbStatusElement, 'error', 'Connection failed');
+                return false;
+            }
+        }
+
+        // Enhanced RFID data file check with better error handling
+        async function checkRFIDDataFile() {
+            try {
+                console.log('Checking RFID data file...');
+                
+                // Create abort controller for timeout
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5000);
+                
+                const response = await fetch('data/last_entry.json?t=' + Date.now(), {
+                    method: 'GET',
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    },
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    console.log('RFID data file not found or inaccessible');
+                    return false;
+                }
+                
+                const data = await response.json();
+                console.log('RFID data found:', data);
+                
+                // Check if we have a valid timestamp
+                if (data.timestamp) {
+                    const fileAge = Date.now() - new Date(data.timestamp).getTime();
+                    const isRecent = fileAge < CONFIG.RFID_TIMEOUT;
+                    console.log(`File age: ${fileAge}ms, Recent: ${isRecent}`);
+                    return isRecent;
+                }
+                
+                // If no timestamp, check if we have any data at all
+                const hasData = Object.keys(data).length > 0;
+                console.log('No timestamp, has data:', hasData);
+                return hasData;
+                
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    console.log('RFID data file check timed out');
+                } else {
+                    console.log('RFID data file check failed:', error.message);
+                }
+                return false;
+            }
+        }
+
+        // Enhanced checkRFIDAPI
+        async function checkRFIDAPI() {
+            try {
+                const response = await fetch('PHPFile/receive_rfid.php?rfid=test&test=true', {
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
+                
+                return response.ok;
+            } catch (error) {
+                console.log('RFID API check failed:', error.message);
+                return false;
+            }
+        }
+
+        // Enhanced startRFIDListener with better verification
+        async function startRFIDListener() {
+            updateStatus(rfidIndicator, rfidStatusElement, 'connecting', 'Starting listener...');
+            
+            try {
+                console.log('Attempting to start RFID listener...');
+                
+                const response = await fetch('start_listener.php?t=' + Date.now(), {
+                    method: 'GET',
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                console.log('Start listener result:', result);
+                
+                if (result.success) {
+                    updateStatus(rfidIndicator, rfidStatusElement, 'connecting', 'Listener starting...');
+                    return true;
+                } else {
+                    updateStatus(rfidIndicator, rfidStatusElement, 'error', result.message || 'Failed to start');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Start RFID failed:', error);
+                updateStatus(rfidIndicator, rfidStatusElement, 'error', `Start failed: ${error.message}`);
+                return false;
+            }
+        }
+
+        // Enhanced RFID listener check with proper delays
+        async function checkRFIDListener() {
+            updateStatus(rfidIndicator, rfidStatusElement, 'connecting', 'Checking listener...');
+            
+            try {
+                // First, check if it's already running
+                const isAlreadyRunning = await checkRFIDDataFile();
+                
+                if (isAlreadyRunning) {
+                    updateStatus(rfidIndicator, rfidStatusElement, 'connected', 'Active');
+                    return true;
+                }
+                
+                // If not running and auto-start is enabled, start it
+                if (CONFIG.AUTO_START_RFID) {
+                    const started = await startRFIDListener();
+                    if (started) {
+                        // Wait longer for Java to initialize
+                        await new Promise(resolve => setTimeout(resolve, 5000));
+                        
+                        // Check again after waiting
+                        const isNowRunning = await checkRFIDDataFile();
+                        if (isNowRunning) {
+                            updateStatus(rfidIndicator, rfidStatusElement, 'connected', 'Active');
+                            return true;
+                        } else {
+                            updateStatus(rfidIndicator, rfidStatusElement, 'warning', 'Started (waiting for data)');
+                            return true;
+                        }
+                    }
+                    return false;
+                } else {
+                    updateStatus(rfidIndicator, rfidStatusElement, 'warning', 'Listener offline');
+                    return false;
+                }
+            } catch (error) {
+                console.error('RFID check failed:', error);
+                updateStatus(rfidIndicator, rfidStatusElement, 'error', 'Check failed');
+                return false;
+            }
+        }
+
+        // Check system APIs
+        async function checkSystemAPI() {
+            updateStatus(apiIndicator, apiStatusElement, 'connecting', 'Testing APIs...');
+            
+            try {
+                const response = await fetch('PHPFile/get_rfid_counts.php?t=' + Date.now(), {
+                    headers: {
+                        'Cache-Control': 'no-cache',
+                        'Pragma': 'no-cache'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    updateStatus(apiIndicator, apiStatusElement, 'connected', 'API Ready');
+                    return true;
+                } else {
+                    throw new Error('API not responding');
+                }
+            } catch (error) {
+                console.error('API check failed:', error);
+                updateStatus(apiIndicator, apiStatusElement, 'error', 'API Error');
+                return false;
+            }
+        }
+
+        // Add periodic checking for RFID status
+        function startRFIDStatusPolling() {
+            // Check RFID status every 10 seconds
+            setInterval(async () => {
+                try {
+                    const isRunning = await checkRFIDDataFile();
+                    if (isRunning) {
+                        // Only update if status changed to avoid flickering
+                        if (!rfidIndicator.classList.contains('status-connected')) {
+                            updateStatus(rfidIndicator, rfidStatusElement, 'connected', 'Active');
+                        }
+                    } else {
+                        if (!rfidIndicator.classList.contains('status-error') && 
+                            !rfidIndicator.classList.contains('status-warning')) {
+                            updateStatus(rfidIndicator, rfidStatusElement, 'warning', 'No recent data');
+                        }
+                    }
+                } catch (error) {
+                    console.log('RFID polling check failed:', error);
+                }
+            }, 10000); // Check every 10 seconds
+        }
+
+        // Handle logo fallback
+        function setupLogoFallback() {
+            const logo = document.querySelector('.logo img');
+            if (logo) {
+                logo.addEventListener('error', function() {
+                    this.style.display = 'none';
+                    const fallbackIcon = document.createElement('i');
+                    fallbackIcon.className = 'fas fa-shield-alt';
+                    fallbackIcon.style.fontSize = '3rem';
+                    fallbackIcon.style.color = 'white';
+                    this.parentNode.appendChild(fallbackIcon);
+                });
+            }
+        }
+
+        // Redirect to login page
+        function redirectToLogin() {
+            window.location.href = 'PHPFile/login.php';
+        }
+
+        // Skip splash screen
+        function skipSplash() {
+            if (statusInterval) {
+                clearInterval(statusInterval);
+            }
+            sessionStorage.setItem('splashSeen', 'true');
+            redirectToLogin();
+        }
+
+        // Initialize and start the splash screen
+        async function initializeSplash() {
+            // Check if user has seen splash recently
+            if (sessionStorage.getItem('splashSeen')) {
+                redirectToLogin();
+                return;
+            }
+
+            setupLogoFallback();
+
+            // Start status updates
+            statusInterval = setInterval(async () => {
+                if (currentStatus < CONFIG.STATUS_MESSAGES.length) {
+                    const progress = Math.round((currentStatus / CONFIG.STATUS_MESSAGES.length) * 100);
+                    updateProgress(progress);
+                    
+                    statusElement.textContent = CONFIG.STATUS_MESSAGES[currentStatus];
+                    
+                    // Perform checks on specific status messages with better timing
+                    if (currentStatus === 1) { // Database check
+                        await checkDatabaseConnection();
+                    } else if (currentStatus === 2) { // RFID check - give it more time
+                        await checkRFIDListener();
+                        // Start periodic checking after initial check
+                        startRFIDStatusPolling();
+                    } else if (currentStatus === 3) { // API check
+                        await checkSystemAPI();
+                    }
+                    
+                    currentStatus++;
+                } else {
+                    clearInterval(statusInterval);
+                    systemChecksComplete = true;
+                    
+                    // Final check with longer timeout for RFID
+                    setTimeout(async () => {
+                        const finalResults = await statusManager.performChecks();
+                        const allSystemsReady = Object.values(finalResults).every(result => result.success);
+                        
+                        if (allSystemsReady) {
+                            statusElement.textContent = "All Systems Ready - Redirecting...";
+                            updateProgress(100);
+                        } else {
+                            statusElement.textContent = "System Ready - Some services may be unavailable";
+                            updateProgress(100);
+                        }
+                        
+                        setTimeout(() => {
+                            sessionStorage.setItem('splashSeen', 'true');
+                            redirectToLogin();
+                        }, CONFIG.REDIRECT_DELAY);
+                    }, 3000);
+                }
+            }, CONFIG.CHECK_INTERVAL);
+
+            // Initial system check
+            statusManager.performChecks();
+        }
+
+        // Event Listeners
+        skipBtn.addEventListener('click', skipSplash);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter') {
+                skipSplash();
+            }
+        });
+
+        // Optional: Add click to skip (except on interactive elements)
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.feature') && !e.target.closest('.system-info') && e.target !== skipBtn) {
+                skipSplash();
+            }
+        });
+
+        // Start the application
+        initializeSplash();
+    </script>
+</body>
+</html>

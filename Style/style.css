@@ -1,0 +1,147 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: url("../Assets/MainBG.png") no-repeat center center fixed;
+    background-size: cover;
+  }
+
+.header {
+    display: flex;
+    align-items: center; 
+    gap: 15px; 
+    padding: auto ;
+  }
+
+#logo {
+    width: 50px;
+    height: 50px;
+  }
+
+
+.rsu {
+    font-size: x-large;
+    font-style: italic;
+    font-weight: bold;
+    margin: 0;
+  }
+
+#settingsBtn {
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    margin-left: 1380px;
+  }
+
+.sidebar {
+    height: 100%;
+    width: 0;
+    position:fixed;
+    top: 0;
+    right: 0; 
+    background-color: #30a7a1c0;
+    overflow-x: hidden;
+    transition: 0.3s;
+    padding-top: 60px;
+  }
+
+.sidebar a {
+    padding: 10px 20px;
+    text-decoration: none;
+    font-size: 30px;
+    color: white;
+    display: block;
+    transition: 0.2s;
+  }
+
+.sidebar a:hover {
+    background: #575757;
+  }
+
+.sidebar .closeBtn {
+    position: absolute;
+    top: 10px;
+    left: 15px;
+    font-size: 30px;
+    color: white;
+    cursor: pointer;
+  }
+
+.container {
+  display: flex;
+  height: 90vh;
+}
+
+.navbar {
+  width: 220px;
+  background-color: #ffffff45;
+  padding: 20px;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  font-size: 25px;
+}
+
+.nav-links {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-links a {
+ text-decoration: none;
+    color: #1e293b;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+
+}
+
+  .nav-links a:not(.active):hover {
+    background: transparent;
+    color: #1e293b;
+  }
+
+  /* Active link */
+  .nav-links a.active {
+    background: #1e40af;
+    color: white;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
+  }
+
+  /* Hover effect only for active link */
+  .nav-links a.active:hover {
+    background: #2563eb;
+  }
+
+.submenu {
+    background: #bfe5f6;
+    padding: 8px 15px;
+    display: flex;
+    gap: 30px;
+    font-weight: bold;
+    font-size: larger;
+  }
+
+.submenu {
+    background: #bfe5f6;
+    padding: 8px 15px;
+    display: flex;
+    gap: 30px;
+    font-weight: bold;
+  }
+.submenu a {
+    text-decoration: none;
+    color: black;
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+
+.submenu a:hover {
+    background: #d9f0fc;
+  }
+
+.submenu a.active {
+    background: #79c2e6;
+    color: white;
+    border-bottom: 5px solid #004466;
+  }

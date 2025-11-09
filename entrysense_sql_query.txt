@@ -1,0 +1,59 @@
+-- Create fresh database
+CREATE DATABASE IF NOT EXISTS entrysense_new;
+USE entrysense_new;
+
+-- Create the table structure (simplified version)
+CREATE TABLE rfid_info (
+    rfid_id INT AUTO_INCREMENT PRIMARY KEY,
+    rfid_uid VARCHAR(255) UNIQUE NOT NULL,
+    role ENUM('student','employee','guest') NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE student (
+    student_id VARCHAR(50) PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    middle_name VARCHAR(100),
+    last_name VARCHAR(100) NOT NULL,
+    department VARCHAR(100),
+    course VARCHAR(100),
+    photo LONGTEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE employee (
+    employee_id VARCHAR(50) PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    middle_name VARCHAR(100),
+    last_name VARCHAR(100) NOT NULL,
+    department VARCHAR(100),
+    position VARCHAR(100),
+    photo LONGTEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE guest (
+    guest_id VARCHAR(50) PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    middle_name VARCHAR(100),
+    last_name VARCHAR(100) NOT NULL,
+    person_to_visit VARCHAR(100),
+    office VARCHAR(100),
+    purpose TEXT,
+    visit_date DATE,
+    time_in TIME,
+    time_out TIME,
+    status VARCHAR(50),
+    photo LONGTEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    rfid_uid VARCHAR(255),
+    role VARCHAR(50),
+    status VARCHAR(50),
+    id_number VARCHAR(100),
+    name VARCHAR(255),
+    scan_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
