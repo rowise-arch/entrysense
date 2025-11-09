@@ -36,7 +36,8 @@ $name = $course = $status = $id_number = "";
       <a href="database.php"><i class="fas fa-database"></i><span>Database</span></a>
       <a href="entrymonitor.php" class="active"><i class="fas fa-id-card"></i><span>Entry Monitor</span></a>
       <a href="logs.php"><i class="fas fa-clipboard-list"></i><span>Logs</span></a>
-      <a href="register.php"><i class="fas fa-user-plus"></i><span>Register</span></a>
+      <a href="register.php"><i class="fas fa-user-plus"></i><span>Register Guest</span></a>
+      <a href="control_panel.php"><i class="fas fa-cogs"></i><span>Control Panel</span></a>
     </nav>
   </aside>
 
