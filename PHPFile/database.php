@@ -1,11 +1,12 @@
 <?php
+// Add at the VERY TOP of the file
+include __DIR__ . '/../Srcipt/access_control.php';
+
 include '../Srcipt/db_connect.php';
 
 // Handle CSV Import
 $message = '';
 $debug_output = ''; // Add this line to capture debug info
-
-
 
 // =============================================
 // CSV IMPORT PROCESSING
@@ -13,8 +14,6 @@ $debug_output = ''; // Add this line to capture debug info
 if (isset($_POST['import'])) {
   $debug_output = "";
   $message = "";
-
-
 
   if (isset($_FILES['csv_file']) && $_FILES['csv_file']['error'] === 0) {
     // File size validation
@@ -250,7 +249,6 @@ if (isset($_POST['import'])) {
   echo $message;
 }
 
-
 /**
  * Reconstruct base64 image from split parts
  */
@@ -405,22 +403,54 @@ function getStatus($created_at)
       <h1>RSU Security Management System</h1>
     </div>
     <div class="nav-right">
+      <div class="user-info">
+        <i class="fas fa-user-shield"></i>
+        <span class="user-name"><?= htmlspecialchars($_SESSION['full_name']) ?></span>
+        <span class="user-role badge"><?= htmlspecialchars($_SESSION['role']) ?></span>
+      </div>
       <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
-      <img src="../Assets/Settings.png" alt="Settings" class="settings-icon">
+      <div class="user-menu">
+        <button class="logout-btn" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
     </div>
   </header>
 
   <!-- ===== Unified Sidebar ===== -->
-  <aside class="sidebar" id="sidebar">
+<aside class="sidebar" id="sidebar">
     <nav class="nav-links">
-      <a href="dashboard.php"><i class="fas fa-chart-line"></i><span>Dashboard</span></a>
-      <a href="database.php" class="active"><i class="fas fa-database"></i><span>Database</span></a>
-      <a href="entrymonitor.php"><i class="fas fa-id-card"></i><span>Entry Monitor</span></a>
-      <a href="logs.php"><i class="fas fa-clipboard-list"></i><span>Logs</span></a>
-      <a href="register.php"><i class="fas fa-user-plus"></i><span>Register Guest</span></a>
-      <a href="control_panel.php"><i class="fas fa-cogs"></i><span>Control Panel</span></a>
+        <a href="dashboard.php" class="<?= basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : '' ?>">
+            <i class="fas fa-chart-line"></i><span>Dashboard</span>
+        </a>
+        
+        <?php if ($auth->hasRole('admin')): ?>
+        <a href="database.php" class="<?= basename($_SERVER['PHP_SELF']) == 'database.php' ? 'active' : '' ?>">
+            <i class="fas fa-database"></i><span>Database</span>
+        </a>
+        <?php endif; ?>
+        
+        <a href="entrymonitor.php" class="<?= basename($_SERVER['PHP_SELF']) == 'entrymonitor.php' ? 'active' : '' ?>">
+            <i class="fas fa-id-card"></i><span>Entry Monitor</span>
+        </a>
+        
+        <?php if ($auth->hasRole('admin')): ?>
+        <a href="logs.php" class="<?= basename($_SERVER['PHP_SELF']) == 'logs.php' ? 'active' : '' ?>">
+            <i class="fas fa-clipboard-list"></i><span>Logs</span>
+        </a>
+        <?php endif; ?>
+        
+        <a href="register.php" class="<?= basename($_SERVER['PHP_SELF']) == 'register.php' ? 'active' : '' ?>">
+            <i class="fas fa-user-plus"></i><span>Register Guest</span>
+        </a>
+        
+        <?php if ($auth->hasRole('admin') || $auth->hasRole('security')): ?>
+        <a href="control_panel.php" class="<?= basename($_SERVER['PHP_SELF']) == 'control_panel.php' ? 'active' : '' ?>">
+            <i class="fas fa-cogs"></i><span>Control Panel</span>
+        </a>
+        <?php endif; ?>
     </nav>
-  </aside>
+</aside>
 
   <!-- ===== Main Content ===== -->
   <main class="main-content" id="mainContent">
@@ -681,6 +711,13 @@ function getStatus($created_at)
     toggle.addEventListener('click', () => {
       sidebar.classList.toggle('active');
     });
+
+    // Logout function
+    function logout() {
+      if (confirm('Are you sure you want to logout?')) {
+        window.location.href = 'logout.php';
+      }
+    }
 
     // Your existing JavaScript functionality remains unchanged
     const tabs = document.querySelectorAll(".tab-button");

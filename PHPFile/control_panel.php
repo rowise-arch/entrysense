@@ -1,5 +1,6 @@
 <?php
 // Fix the include path
+include __DIR__ . '/../Srcipt/access_control.php';
 include __DIR__ . '/../Srcipt/db_connect.php';
 
 // Check if RFID listener is running
@@ -12,6 +13,7 @@ if (function_exists('shell_exec')) {
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -37,16 +39,39 @@ if (function_exists('shell_exec')) {
     </header>
 
     <!-- ===== Unified Sidebar ===== -->
-    <aside class="sidebar" id="sidebar">
-        <nav class="nav-links">
-            <a href="dashboard.php"><i class="fas fa-chart-line"></i><span>Dashboard</span></a>
-            <a href="database.php"><i class="fas fa-database"></i><span>Database</span></a>
-            <a href="entrymonitor.php"><i class="fas fa-id-card"></i><span>Entry Monitor</span></a>
-            <a href="logs.php"><i class="fas fa-clipboard-list"></i><span>Logs</span></a>
-            <a href="register.php"><i class="fas fa-user-plus"></i><span>Register Guest</span></a>
-            <a href="control_panel.php" class="active"><i class="fas fa-cogs"></i><span>Control Panel</span></a>
-        </nav>
-    </aside>
+<aside class="sidebar" id="sidebar">
+    <nav class="nav-links">
+        <a href="dashboard.php" class="<?= basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : '' ?>">
+            <i class="fas fa-chart-line"></i><span>Dashboard</span>
+        </a>
+        
+        <?php if ($auth->hasRole('admin')): ?>
+        <a href="database.php" class="<?= basename($_SERVER['PHP_SELF']) == 'database.php' ? 'active' : '' ?>">
+            <i class="fas fa-database"></i><span>Database</span>
+        </a>
+        <?php endif; ?>
+        
+        <a href="entrymonitor.php" class="<?= basename($_SERVER['PHP_SELF']) == 'entrymonitor.php' ? 'active' : '' ?>">
+            <i class="fas fa-id-card"></i><span>Entry Monitor</span>
+        </a>
+        
+        <?php if ($auth->hasRole('admin')): ?>
+        <a href="logs.php" class="<?= basename($_SERVER['PHP_SELF']) == 'logs.php' ? 'active' : '' ?>">
+            <i class="fas fa-clipboard-list"></i><span>Logs</span>
+        </a>
+        <?php endif; ?>
+        
+        <a href="register.php" class="<?= basename($_SERVER['PHP_SELF']) == 'register.php' ? 'active' : '' ?>">
+            <i class="fas fa-user-plus"></i><span>Register Guest</span>
+        </a>
+        
+        <?php if ($auth->hasRole('admin') || $auth->hasRole('security')): ?>
+        <a href="control_panel.php" class="<?= basename($_SERVER['PHP_SELF']) == 'control_panel.php' ? 'active' : '' ?>">
+            <i class="fas fa-cogs"></i><span>Control Panel</span>
+        </a>
+        <?php endif; ?>
+    </nav>
+</aside>
 
     <!-- ===== Main Content ===== -->
     <main class="main-content" id="mainContent">
@@ -68,7 +93,7 @@ if (function_exists('shell_exec')) {
                         <span id="rfidStatusDetail"><?= $rfidRunning ? 'Active and scanning' : 'Not running' ?></span>
                     </div>
                 </div>
-                
+
                 <div class="status-card glass-card">
                     <div class="status-icon unknown">
                         <i class="fas fa-door-open"></i>
@@ -85,21 +110,21 @@ if (function_exists('shell_exec')) {
             <div class="control-section glass-card">
                 <h3><i class="fas fa-door-open"></i> Manual Gate Control</h3>
                 <p>Manually open or close the security gate</p>
-                
+
                 <div class="gate-controls">
                     <button class="control-btn open-gate" id="openGateBtn">
                         <i class="fas fa-lock-open"></i>
                         <span>Open Gate</span>
                         <small>Grant temporary access</small>
                     </button>
-                    
+
                     <button class="control-btn close-gate" id="closeGateBtn">
                         <i class="fas fa-lock"></i>
                         <span>Close Gate</span>
                         <small>Restrict access</small>
                     </button>
                 </div>
-                
+
                 <div class="gate-timer" id="gateTimer" style="display: none;">
                     <div class="timer-display">
                         <i class="fas fa-clock"></i>
@@ -115,26 +140,29 @@ if (function_exists('shell_exec')) {
             <div class="control-section glass-card">
                 <h3><i class="fas fa-microchip"></i> RFID Listener Control</h3>
                 <p>Start or stop the RFID scanning service</p>
-                
+
                 <div class="listener-controls">
-                    <button class="control-btn start-listener <?= $rfidRunning ? 'disabled' : '' ?>" id="startListenerBtn" <?= $rfidRunning ? 'disabled' : '' ?>>
+                    <button class="control-btn start-listener <?= $rfidRunning ? 'disabled' : '' ?>"
+                        id="startListenerBtn" <?= $rfidRunning ? 'disabled' : '' ?>>
                         <i class="fas fa-play-circle"></i>
                         <span>Start Listener</span>
                         <small>Begin RFID scanning</small>
                     </button>
-                    
-                    <button class="control-btn stop-listener <?= !$rfidRunning ? 'disabled' : '' ?>" id="stopListenerBtn" <?= !$rfidRunning ? 'disabled' : '' ?>>
+
+                    <button class="control-btn stop-listener <?= !$rfidRunning ? 'disabled' : '' ?>"
+                        id="stopListenerBtn" <?= !$rfidRunning ? 'disabled' : '' ?>>
                         <i class="fas fa-stop-circle"></i>
                         <span>Stop Listener</span>
                         <small>Halt RFID scanning</small>
                     </button>
                 </div>
-                
+
                 <div class="listener-status">
                     <div class="status-indicators">
                         <div class="status-item">
                             <span class="status-label">Process:</span>
-                            <span class="status-value" id="processStatus"><?= $rfidRunning ? 'Running' : 'Stopped' ?></span>
+                            <span class="status-value"
+                                id="processStatus"><?= $rfidRunning ? 'Running' : 'Stopped' ?></span>
                         </div>
                         <div class="status-item">
                             <span class="status-label">Last Scan:</span>
@@ -152,14 +180,14 @@ if (function_exists('shell_exec')) {
             <div class="control-section glass-card emergency">
                 <h3><i class="fas fa-exclamation-triangle"></i> Emergency Controls</h3>
                 <p>Immediate system actions for emergency situations</p>
-                
+
                 <div class="emergency-controls">
                     <button class="control-btn emergency-stop" id="emergencyStopBtn">
                         <i class="fas fa-ban"></i>
                         <span>Emergency Stop</span>
                         <small>Stop all systems immediately</small>
                     </button>
-                    
+
                     <button class="control-btn lock-system" id="lockSystemBtn">
                         <i class="fas fa-shield-alt"></i>
                         <span>Lock System</span>
@@ -172,7 +200,7 @@ if (function_exists('shell_exec')) {
             <div class="control-section glass-card">
                 <h3><i class="fas fa-list-alt"></i> Control Log</h3>
                 <p>Recent control panel activities</p>
-                
+
                 <div class="control-log" id="controlLog">
                     <div class="log-empty">
                         <i class="fas fa-info-circle"></i>
@@ -215,4 +243,5 @@ if (function_exists('shell_exec')) {
     <!-- Control Panel JavaScript -->
     <script src="../Srcipt/control_panel.js"></script>
 </body>
+
 </html>

@@ -84,7 +84,7 @@ class SplashScreenManager {
     
     async initializeSplash() {
         if (sessionStorage.getItem('splashSeen')) {
-            this.redirectToDashboard();
+            this.redirectToLogin();
             return;
         }
         
@@ -165,8 +165,8 @@ class SplashScreenManager {
                 // Don't redirect - show warning and let user decide
                 this.showSystemStatusWarning();
             } else if (allSystemsReady) {
-                // All systems ready - auto redirect
-                this.elements.statusText.textContent = "All Systems Ready - Redirecting to Dashboard...";
+                // All systems ready - auto redirect to LOGIN
+                this.elements.statusText.textContent = "All Systems Ready - Redirecting to Login...";
                 this.redirectWithDelay();
             } else {
                 // Some systems ready - show status and let user proceed
@@ -200,7 +200,7 @@ class SplashScreenManager {
                 </div>
                 <div class="action-buttons">
                     <button class="btn-continue" id="continueBtn">
-                        <i class="fas fa-play"></i> Continue to Dashboard
+                        <i class="fas fa-play"></i> Continue to Login
                     </button>
                     <button class="btn-retry" id="retryBtn">
                         <i class="fas fa-redo"></i> Retry System Check
@@ -214,7 +214,7 @@ class SplashScreenManager {
         
         // Add event listeners
         document.getElementById('continueBtn').addEventListener('click', () => {
-            this.redirectToDashboard();
+            this.redirectToLogin();
         });
         
         document.getElementById('retryBtn').addEventListener('click', () => {
@@ -222,7 +222,7 @@ class SplashScreenManager {
         });
         
         // Also update skip button text
-        this.elements.skipBtn.innerHTML = '<i class="fas fa-forward"></i> Continue Anyway';
+        this.elements.skipBtn.innerHTML = '<i class="fas fa-forward"></i> Continue to Login';
     }
     
     retrySystemCheck() {
@@ -247,7 +247,7 @@ class SplashScreenManager {
     redirectWithDelay() {
         setTimeout(() => {
             sessionStorage.setItem('splashSeen', 'true');
-            this.redirectToDashboard();
+            this.redirectToLogin();
         }, CONFIG.REDIRECT_DELAY);
     }
     
@@ -553,8 +553,9 @@ class SplashScreenManager {
         }, 10000);
     }
     
-    redirectToDashboard() {
-        window.location.href = 'PHPFile/dashboard.php';
+    // UPDATED: Redirect to login instead of dashboard
+    redirectToLogin() {
+        window.location.href = 'PHPFile/login.php';
     }
     
     skipSplash() {
@@ -568,7 +569,7 @@ class SplashScreenManager {
         if (!allSystemsReady && !this.systemChecksComplete) {
             this.showSystemStatusWarning();
         } else {
-            this.redirectToDashboard();
+            this.redirectToLogin();
         }
     }
 }
