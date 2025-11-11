@@ -18,7 +18,9 @@ if ($conn->connect_error) {
 
 // --- Fetch logs ---
 $sql = "SELECT id, rfid_uid, role, status, scan_time FROM logs ORDER BY scan_time DESC";
-$result = $conn->query($sql);
+$stmt = $conn->prepare($sql);
+$stmt->execute();
+$result = $stmt->get_result();
 
 // Calculate statistics
 $grantedCount = 0;
