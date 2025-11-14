@@ -1,9 +1,9 @@
 <?php
 // Add at the VERY TOP of the file
-include __DIR__ . '/../Srcipt/access_control.php';
+include __DIR__ . '/../entrysense_api/database/access_control.php';
 
 // Fix the include path - adjust since dashboard.php is now in PHPFile
-include __DIR__ . '/../Srcipt/db_connect.php';
+include __DIR__ . '/../entrysense_api/database/db_connect.php';
 
 $name = "";
 $course = "";

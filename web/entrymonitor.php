@@ -1,6 +1,6 @@
 <?php
 // Add at the VERY TOP of the file
-include __DIR__ . '/../Srcipt/access_control.php';
+include __DIR__ . '/../entrysense_api/database/access_control.php';
 
 // Fallback values before JS updates
 $name = $course = $status = $id_number = "";

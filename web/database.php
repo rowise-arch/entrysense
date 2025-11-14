@@ -1,8 +1,8 @@
 <?php
 // Add at the VERY TOP of the file
-include __DIR__ . '/../Srcipt/access_control.php';
+include __DIR__ . '/../entrysense_api/database/access_control.php';
 
-include '../Srcipt/db_connect.php';
+include __DIR__ . '/../entrysense_api/database/db_connect.php';
 
 // Handle CSV Import
 $message = '';
@@ -968,7 +968,7 @@ function getStatus($created_at)
         buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing Out...';
         buttonElement.disabled = true;
 
-        const response = await fetch('../PHPFile/sign_out_guest.php', {
+        const response = await fetch('../entrysense_api/api/sign_out_guest.php', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

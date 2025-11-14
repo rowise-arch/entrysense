@@ -1,7 +1,7 @@
 <?php
 // Fix the include path
-include __DIR__ . '/../Srcipt/access_control.php';
-include __DIR__ . '/../Srcipt/db_connect.php';
+include __DIR__ . '/../entrysense_api/database/access_control.php';
+include __DIR__ . '/../entrysense_api/database/db_connect.php';
 ?>
 <!DOCTYPE html>
 <html lang="en">

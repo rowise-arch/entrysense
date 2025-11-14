@@ -1,6 +1,6 @@
 <?php
 // Fix the include path
-include __DIR__ . '/../Srcipt/db_connect.php';
+include __DIR__ . '/../entrysense_api/database/db_connect.php';
 
 // --- Database connection ---
 $servername = "localhost";

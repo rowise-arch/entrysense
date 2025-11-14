@@ -2,7 +2,7 @@
 session_start();
 
 // Include the Auth class
-include __DIR__ . '/../Srcipt/Auth.php';
+include __DIR__ . '/../entrysense_api/database/Auth.php';
 
 // Process login if form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
