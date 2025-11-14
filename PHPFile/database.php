@@ -150,8 +150,9 @@ if (isset($_POST['import'])) {
               }
 
               // Insert into rfid_info
-              $insert_rfid = $conn->query("INSERT INTO rfid_info (rfid_uid, role) VALUES ('$rfid', '$role')");
-              if (!$insert_rfid) {
+              $stmt = $conn->prepare("INSERT INTO rfid_info (rfid_uid, role) VALUES (?, ?)");
+              $stmt->bind_param("ss", $rfid, $role);
+              if (!$stmt->execute()) {
                 $error_count++;
                 continue;
               }
@@ -169,11 +170,15 @@ if (isset($_POST['import'])) {
                 $result = $stmt->execute();
 
                 if ($result) {
-                  $conn->query("INSERT INTO rfid_student_info (rfid_id, student_id) VALUES ($rfid_id, '$student_id')");
+                  $stmt = $conn->prepare("INSERT INTO rfid_student_info (rfid_id, student_id) VALUES (?, ?)");
+                  $stmt->bind_param("is", $rfid_id, $student_id);
+                  $stmt->execute();
                   $imported_count++;
                 } else {
                   $error_count++;
-                  $conn->query("DELETE FROM rfid_info WHERE rfid_id = $rfid_id");
+                  $stmt = $conn->prepare("DELETE FROM rfid_info WHERE rfid_id = ?");
+                  $stmt->bind_param("i", $rfid_id);
+                  $stmt->execute();
                 }
 
               } elseif ($role === 'employee') {
@@ -186,11 +191,15 @@ if (isset($_POST['import'])) {
                 $result = $stmt->execute();
 
                 if ($result) {
-                  $conn->query("INSERT INTO rfid_employee_info (rfid_id, employee_id) VALUES ($rfid_id, '$employee_id')");
+                  $stmt = $conn->prepare("INSERT INTO rfid_employee_info (rfid_id, employee_id) VALUES (?, ?)");
+                  $stmt->bind_param("is", $rfid_id, $employee_id);
+                  $stmt->execute();
                   $imported_count++;
                 } else {
                   $error_count++;
-                  $conn->query("DELETE FROM rfid_info WHERE rfid_id = $rfid_id");
+                  $stmt = $conn->prepare("DELETE FROM rfid_info WHERE rfid_id = ?");
+                  $stmt->bind_param("i", $rfid_id);
+                  $stmt->execute();
                 }
 
               } elseif ($role === 'guest') {
@@ -203,16 +212,22 @@ if (isset($_POST['import'])) {
                 $result = $stmt->execute();
 
                 if ($result) {
-                  $conn->query("INSERT INTO rfid_guest_info (rfid_id, guest_id) VALUES ($rfid_id, '$guest_id')");
+                  $stmt = $conn->prepare("INSERT INTO rfid_guest_info (rfid_id, guest_id) VALUES (?, ?)");
+                  $stmt->bind_param("is", $rfid_id, $guest_id);
+                  $stmt->execute();
                   $imported_count++;
                 } else {
                   $error_count++;
-                  $conn->query("DELETE FROM rfid_info WHERE rfid_id = $rfid_id");
+                  $stmt = $conn->prepare("DELETE FROM rfid_info WHERE rfid_id = ?");
+                  $stmt->bind_param("i", $rfid_id);
+                  $stmt->execute();
                 }
 
               } else {
                 $skipped_count++;
-                $conn->query("DELETE FROM rfid_info WHERE rfid_id = $rfid_id");
+                $stmt = $conn->prepare("DELETE FROM rfid_info WHERE rfid_id = ?");
+                $stmt->bind_param("i", $rfid_id);
+                $stmt->execute();
               }
 
             } catch (Exception $e) {

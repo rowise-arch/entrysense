@@ -1,5 +1,6 @@
 <?php
 // Fix the include path
+include __DIR__ . '/../Srcipt/access_control.php';
 include __DIR__ . '/../Srcipt/db_connect.php';
 
 // --- Database connection ---
@@ -18,7 +19,9 @@ if ($conn->connect_error) {
 
 // --- Fetch logs ---
 $sql = "SELECT id, rfid_uid, role, status, scan_time FROM logs ORDER BY scan_time DESC";
-$result = $conn->query($sql);
+$stmt = $conn->prepare($sql);
+$stmt->execute();
+$result = $stmt->get_result();
 
 // Calculate statistics
 $grantedCount = 0;
@@ -65,15 +68,40 @@ if ($result->num_rows > 0) {
     </header>
 
     <!-- ===== Unified Sidebar ===== -->
-    <aside class="sidebar" id="sidebar">
-        <nav class="nav-links">
-            <a href="dashboard.php"><i class="fas fa-chart-line"></i><span>Dashboard</span></a>
-            <a href="database.php"><i class="fas fa-database"></i><span>Database</span></a>
-            <a href="entrymonitor.php"><i class="fas fa-id-card"></i><span>Entry Monitor</span></a>
-            <a href="logs.php" class="active"><i class="fas fa-clipboard-list"></i><span>Logs</span></a>
-            <a href="register.php"><i class="fas fa-user-plus"></i><span>Register</span></a>
-        </nav>
-    </aside>
+    <!-- ===== Unified Sidebar ===== -->
+<aside class="sidebar" id="sidebar">
+    <nav class="nav-links">
+        <a href="dashboard.php" class="<?= basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : '' ?>">
+            <i class="fas fa-chart-line"></i><span>Dashboard</span>
+        </a>
+        
+        <?php if ($auth->hasRole('admin')): ?>
+        <a href="database.php" class="<?= basename($_SERVER['PHP_SELF']) == 'database.php' ? 'active' : '' ?>">
+            <i class="fas fa-database"></i><span>Database</span>
+        </a>
+        <?php endif; ?>
+        
+        <a href="entrymonitor.php" class="<?= basename($_SERVER['PHP_SELF']) == 'entrymonitor.php' ? 'active' : '' ?>">
+            <i class="fas fa-id-card"></i><span>Entry Monitor</span>
+        </a>
+        
+        <?php if ($auth->hasRole('admin')): ?>
+        <a href="logs.php" class="<?= basename($_SERVER['PHP_SELF']) == 'logs.php' ? 'active' : '' ?>">
+            <i class="fas fa-clipboard-list"></i><span>Logs</span>
+        </a>
+        <?php endif; ?>
+        
+        <a href="register.php" class="<?= basename($_SERVER['PHP_SELF']) == 'register.php' ? 'active' : '' ?>">
+            <i class="fas fa-user-plus"></i><span>Register Guest</span>
+        </a>
+        
+        <?php if ($auth->hasRole('admin') || $auth->hasRole('security')): ?>
+        <a href="control_panel.php" class="<?= basename($_SERVER['PHP_SELF']) == 'control_panel.php' ? 'active' : '' ?>">
+            <i class="fas fa-cogs"></i><span>Control Panel</span>
+        </a>
+        <?php endif; ?>
+    </nav>
+</aside>
 
     <!-- ===== Main Content ===== -->
     <main class="main-content" id="mainContent">

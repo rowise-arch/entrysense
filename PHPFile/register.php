@@ -15,6 +15,56 @@ include __DIR__ . '/../Srcipt/db_connect.php';
     <link rel="stylesheet" href="../Style/global.css">
     <link rel="stylesheet" href="../Style/register.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* Simple Data Privacy Act Styles */
+        .privacy-consent-simple {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .privacy-checkbox-simple {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .privacy-checkbox-simple input[type="checkbox"] {
+            margin-top: 3px;
+            width: 18px;
+            height: 18px;
+        }
+
+        .privacy-text-simple {
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #495057;
+        }
+
+        .privacy-link-simple {
+            color: #0055a4;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .privacy-link-simple:hover {
+            text-decoration: underline;
+            color: #003d7a;
+        }
+
+        .required-star {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .validation-message.error {
+            color: #dc3545;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+    </style>
 </head>
 
 <body>
@@ -168,6 +218,23 @@ include __DIR__ . '/../Srcipt/db_connect.php';
                         </div>
                     </div>
 
+                    <!-- Simple Data Privacy Act Consent -->
+                    <div class="privacy-consent-simple">
+                        <div class="privacy-checkbox-simple">
+                            <input type="checkbox" id="privacyConsent" name="privacyConsent" required>
+                            <div class="privacy-text-simple">
+                                <strong>Data Privacy Act of 2012 (RA 10173) Consent</strong><br>
+                                I agree to the collection and processing of my personal data in accordance with 
+                                the Philippine Data Privacy Act. 
+                                <a href="https://privacy.gov.ph/data-privacy-act/" target="_blank" class="privacy-link-simple">
+                                    View Data Privacy Act
+                                </a>
+                                <span class="required-star">*</span>
+                            </div>
+                        </div>
+                        <div class="validation-message" id="privacyConsentValidation"></div>
+                    </div>
+
                     <div class="form-actions">
                         <button type="button" class="btn-secondary" onclick="clearForm()">
                             <i class="fas fa-times"></i> Clear Form
@@ -252,6 +319,11 @@ include __DIR__ . '/../Srcipt/db_connect.php';
             if (this.value !== 'Other') {
                 otherPurpose.value = '';
             }
+        });
+
+        // Privacy consent validation
+        document.getElementById('privacyConsent').addEventListener('change', function() {
+            validatePrivacyConsent();
         });
 
         // Camera functionality
@@ -407,7 +479,8 @@ include __DIR__ . '/../Srcipt/db_connect.php';
                     document.getElementById('otherPurpose').value :
                     document.getElementById('purpose').value,
                 timeIn: document.getElementById('timeIn').value,
-                photo: photoData
+                photo: photoData,
+                privacyConsent: document.getElementById('privacyConsent').checked
             };
 
             try {
@@ -471,7 +544,29 @@ include __DIR__ . '/../Srcipt/db_connect.php';
                 return false;
             }
 
+            // Validate privacy consent
+            if (!validatePrivacyConsent()) {
+                alert('You must agree to the Data Privacy Act to continue');
+                document.getElementById('privacyConsent').focus();
+                return false;
+            }
+
             return true;
+        }
+
+        function validatePrivacyConsent() {
+            const checkbox = document.getElementById('privacyConsent');
+            const validationElement = document.getElementById('privacyConsentValidation');
+            
+            if (!checkbox.checked) {
+                validationElement.textContent = 'You must agree to the Data Privacy Act to continue';
+                validationElement.className = 'validation-message error';
+                return false;
+            } else {
+                validationElement.textContent = '';
+                validationElement.className = 'validation-message';
+                return true;
+            }
         }
 
         function clearForm() {
@@ -490,6 +585,10 @@ include __DIR__ . '/../Srcipt/db_connect.php';
             const now = new Date();
             const timeIn = now.toTimeString().substring(0, 5);
             document.getElementById('timeIn').value = timeIn;
+
+            // Clear privacy consent validation
+            document.getElementById('privacyConsentValidation').textContent = '';
+            document.getElementById('privacyConsentValidation').className = 'validation-message';
         }
 
         function closeSuccessModal() {

@@ -1,11 +1,27 @@
-[09/11/2025 19:11:18.40] Starting RFID Listener... 
+[14/11/2025  9:02:00.50] Starting RFID Listener... 
 Current directory: C:\wamp64\www\entrysense\JavaListener 
 java version "20.0.2" 2023-07-18
 Java(TM) SE Runtime Environment (build 20.0.2+9-78)
 Java HotSpot(TM) 64-Bit Server VM (build 20.0.2+9-78, mixed mode, sharing)
-All checks passed. Starting RFID Listener... 
+Files in directory: 
+EntryMonitorListener.java
+GateControl.java
+jSerialComm-2.11.2.jar
+json-20231013.jar
+mysql-connector-j-9.4.0.jar
+node_modules
+package-lock.json
+package.json
+RFIDListener.class
+RFIDListener.java
+rfid_listener.log
+rfid_log.txt
+start_rfid_listener.bat
+start_rfid_listener.bat - Shortcut.lnk
+Starting RFID Listener with command: 
+java -cp ".;jSerialComm-2.11.2.jar;mysql-connector-j-9.4.0.jar;json-20231013.jar" RFIDListener 
 ? RFID Listener Starting...
-? Serial port opened: COM10
-? Database connected.
-? Listening for RFID scans...
+? Failed to start gate control server: Address already in use: bind
+? System crash: Failed to open serial port: COM10
+? Restarting in 5 seconds...
 ^C
