@@ -402,7 +402,7 @@ class SplashScreenManager {
     async checkRFIDProcess() {
         try {
             // CORRECTED PATH: PHPFile/check_rfid_process.php
-            const response = await fetch('../entrysense_.api/util/check_rfid_process.php?t=' + Date.now(), {
+            const response = await fetch('../entrysense_api/util/check_rfid_process.php?t=' + Date.now(), {
                 method: 'GET',
                 headers: {
                     'Cache-Control': 'no-cache',
