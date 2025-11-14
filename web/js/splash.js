@@ -256,7 +256,7 @@ class SplashScreenManager {
         this.updateStatus(this.elements.dbIndicator, this.elements.dbStatus, 'connecting', 'Testing connection...');
         
         try {
-            const response = await fetch('test_pdo.php', {
+            const response = await fetch('../entrysense_api/database/test_pdo.php', {
                 method: 'GET',
                 headers: {
                     'Cache-Control': 'no-cache',
@@ -294,7 +294,7 @@ class SplashScreenManager {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 3000);
             
-            const response = await fetch('data/last_entry.json?t=' + Date.now(), {
+            const response = await fetch('../data/last_entry.json?t=' + Date.now(), {
                 method: 'GET',
                 headers: {
                     'Cache-Control': 'no-cache',
@@ -344,7 +344,7 @@ class SplashScreenManager {
             console.log('Executing RFID batch file...');
             
             // CORRECTED PATH: PHPFile/start_rfid_listener.php
-            const response = await fetch('PHPFile/start_rfid_listener.php?t=' + Date.now(), {
+            const response = await fetch('../entrysense_api/util/start_rfid_listener.php?t=' + Date.now(), {
                 method: 'GET',
                 headers: {
                     'Cache-Control': 'no-cache',
@@ -402,7 +402,7 @@ class SplashScreenManager {
     async checkRFIDProcess() {
         try {
             // CORRECTED PATH: PHPFile/check_rfid_process.php
-            const response = await fetch('PHPFile/check_rfid_process.php?t=' + Date.now(), {
+            const response = await fetch('../entrysense_.api/util/check_rfid_process.php?t=' + Date.now(), {
                 method: 'GET',
                 headers: {
                     'Cache-Control': 'no-cache',
@@ -504,9 +504,9 @@ class SplashScreenManager {
         this.updateStatus(this.elements.apiIndicator, this.elements.apiStatus, 'connecting', 'Testing APIs...');
         
         try {
-            const response = await fetch('PHPFile/get_rfid_counts.php?t=' + Date.now(), {
+            const response = await fetch('../entrysense_api/api/get_rfid_counts.php?t=' + Date.now(), {
                 headers: {
-                    'Cache-Control': 'no-cache',
+                    'Cache-control': 'no-cache',
                     'Pragma': 'no-cache'
                 }
             });
@@ -555,7 +555,7 @@ class SplashScreenManager {
     
     // UPDATED: Redirect to login instead of dashboard
     redirectToLogin() {
-        window.location.href = 'PHPFile/login.php';
+        window.location.href = 'login.php';
     }
     
     skipSplash() {
