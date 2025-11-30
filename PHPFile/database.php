@@ -19,7 +19,7 @@ if (isset($_POST['import'])) {
     // File size validation
     $max_file_size = 50 * 1024 * 1024; // 50MB
     $file_size = $_FILES['csv_file']['size'];
-    
+
 
     if ($file_size > $max_file_size) {
       $message = "❌ File too large. Maximum size: 50MB";
@@ -27,13 +27,13 @@ if (isset($_POST['import'])) {
       $message = "❌ File is empty";
     } else {
       $file_tmp = $_FILES['csv_file']['tmp_name'];
-      
+
       // Verify file exists and is readable
       if (!file_exists($file_tmp) || !is_readable($file_tmp)) {
         $message = "❌ Cannot read uploaded file";
       } else {
         $debug_output .= "<strong>=== PROCESSING START ===</strong><br>";
-        
+
         try {
           $handle = fopen($file_tmp, 'r');
           if (!$handle) {
@@ -82,7 +82,7 @@ if (isset($_POST['import'])) {
           // ✅ PROCESS CSV ROWS WITH MEMORY OPTIMIZATION
           while (($row = fgetcsv($handle, 1000000, ",")) !== FALSE) {
             $batch_counter++;
-            
+
             // Free memory every 50 rows
             if ($batch_counter % 50 == 0) {
               gc_collect_cycles();
@@ -255,11 +255,11 @@ if (isset($_POST['import'])) {
       7 => 'Write failed',
       8 => 'PHP extension stopped upload'
     ];
-    
+
     $message = "❌ Please select a valid CSV file. Error: " . ($error_messages[$upload_error] ?? 'Unknown error');
     $message .= "<br><br>Debug Info:<br>" . $debug_output;
   }
-  
+
   // Display final message
   echo $message;
 }
@@ -433,39 +433,50 @@ function getStatus($created_at)
   </header>
 
   <!-- ===== Unified Sidebar ===== -->
-<aside class="sidebar" id="sidebar">
+  <aside class="sidebar" id="sidebar">
     <nav class="nav-links">
-        <a href="dashboard.php" class="<?= basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : '' ?>">
-            <i class="fas fa-chart-line"></i><span>Dashboard</span>
-        </a>
-        
-        <?php if ($auth->hasRole('admin')): ?>
+      <a href="dashboard.php" class="<?= basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : '' ?>">
+        <i class="fas fa-chart-line"></i><span>Dashboard</span>
+      </a>
+
+      <?php if ($auth->hasRole('admin')): ?>
         <a href="database.php" class="<?= basename($_SERVER['PHP_SELF']) == 'database.php' ? 'active' : '' ?>">
-            <i class="fas fa-database"></i><span>Database</span>
+          <i class="fas fa-database"></i><span>Database</span>
         </a>
-        <?php endif; ?>
-        
-        <a href="entrymonitor.php" class="<?= basename($_SERVER['PHP_SELF']) == 'entrymonitor.php' ? 'active' : '' ?>">
-            <i class="fas fa-id-card"></i><span>Entry Monitor</span>
-        </a>
-        
-        <?php if ($auth->hasRole('admin')): ?>
+      <?php endif; ?>
+
+      <a href="entrymonitor.php" class="<?= basename($_SERVER['PHP_SELF']) == 'entrymonitor.php' ? 'active' : '' ?>">
+        <i class="fas fa-id-card"></i><span>Entry Monitor</span>
+      </a>
+
+      <?php if ($auth->hasRole('admin')): ?>
         <a href="logs.php" class="<?= basename($_SERVER['PHP_SELF']) == 'logs.php' ? 'active' : '' ?>">
-            <i class="fas fa-clipboard-list"></i><span>Logs</span>
+          <i class="fas fa-clipboard-list"></i><span>RFID Logs</span>
         </a>
-        <?php endif; ?>
-        
-        <a href="register.php" class="<?= basename($_SERVER['PHP_SELF']) == 'register.php' ? 'active' : '' ?>">
-            <i class="fas fa-user-plus"></i><span>Register Guest</span>
-        </a>
-        
-        <?php if ($auth->hasRole('admin') || $auth->hasRole('security')): ?>
+      <?php endif; ?>
+
+      <a href="register.php" class="<?= basename($_SERVER['PHP_SELF']) == 'register.php' ? 'active' : '' ?>">
+        <i class="fas fa-user-plus"></i><span>Register Guest</span>
+      </a>
+
+      <?php if ($auth->hasRole('admin') || $auth->hasRole('security')): ?>
         <a href="control_panel.php" class="<?= basename($_SERVER['PHP_SELF']) == 'control_panel.php' ? 'active' : '' ?>">
-            <i class="fas fa-cogs"></i><span>Control Panel</span>
+          <i class="fas fa-cogs"></i><span>Control Panel</span>
         </a>
-        <?php endif; ?>
+      <?php endif; ?>
+
+      <!-- User Management Links -->
+      <?php if ($auth->hasRole('admin')): ?>
+        <a href="user_management.php"
+          class="<?= basename($_SERVER['PHP_SELF']) == 'user_management.php' ? 'active' : '' ?>">
+          <i class="fas fa-users-cog"></i><span>User Management</span>
+        </a>
+        <a href="user_logs.php" class="<?= basename($_SERVER['PHP_SELF']) == 'user_logs.php' ? 'active' : '' ?>">
+          <i class="fas fa-history"></i><span>User Activity Logs</span>
+        </a>
+      <?php endif; ?>
     </nav>
-</aside>
+  </aside>
 
   <!-- ===== Main Content ===== -->
   <main class="main-content" id="mainContent">
@@ -668,9 +679,8 @@ function getStatus($created_at)
                       </td>
                       <td>
                         <?php if (empty($row['time_out'])): ?>
-                          <button class="btn-signout" 
-                                  data-guest-id="<?= $row['guest_id'] ?>" 
-                                  data-visitor-name="<?= htmlspecialchars($row['full_name']) ?>">
+                          <button class="btn-signout" data-guest-id="<?= $row['guest_id'] ?>"
+                            data-visitor-name="<?= htmlspecialchars($row['full_name']) ?>">
                             <i class="fas fa-sign-out-alt"></i> Sign Out
                           </button>
                         <?php else: ?>
@@ -709,9 +719,7 @@ function getStatus($created_at)
         <p><strong>Department:</strong> <span id="modalDept"></span></p>
         <p><strong>Course/Position:</strong> <span id="modalCourse"></span></p>
         <p><strong>Created At:</strong> <span id="modalCreated"></span></p>
-        <p><strong>Issued At:</strong> <span id="modalIssued"></span></p>
-        <p><strong>Valid From:</strong> <span id="modalFrom"></span></p>
-        <p><strong>Valid To:</strong> <span id="modalTo"></span></p>
+        <p><strong>Valid Until:</strong> <span id="modalValidUntil"></span></p>
         <p><strong>Status:</strong> <span id="modalStatus"></span></p>
       </div>
     </div>
@@ -758,24 +766,43 @@ function getStatus($created_at)
         document.getElementById("modalRfid").innerText = data.rfid_uid || "—";
         document.getElementById("modalDept").innerText = data.department || "—";
         document.getElementById("modalCourse").innerText = data.course || data.position || data.purpose || "—";
-        document.getElementById("modalCreated").innerText = data.created_at || "—";
-        document.getElementById("modalIssued").innerText = data.issued_at || "—";
-        document.getElementById("modalFrom").innerText = data.valid_from || "—";
-        document.getElementById("modalTo").innerText = data.valid_to || "—";
 
+        // Format Created At date
+        if (data.created_at) {
+          const createdDate = new Date(data.created_at);
+          document.getElementById("modalCreated").innerText = formatDate(createdDate);
+        } else {
+          document.getElementById("modalCreated").innerText = "—";
+        }
+
+        // Calculate and display Valid Until (6 months from created_at)
         if (data.created_at) {
           const created = new Date(data.created_at);
-          const expiry = new Date(created);
-          expiry.setMonth(expiry.getMonth() + 6);
+          const validUntil = new Date(created);
+          validUntil.setMonth(validUntil.getMonth() + 6);
+          document.getElementById("modalValidUntil").innerText = formatDate(validUntil);
+
           const now = new Date();
-          document.getElementById("modalStatus").innerText = now <= expiry ? "Active" : "Expired";
+          document.getElementById("modalStatus").innerText = now <= validUntil ? "Active" : "Expired";
         } else {
+          document.getElementById("modalValidUntil").innerText = "—";
           document.getElementById("modalStatus").innerText = "—";
         }
 
         modal.style.display = "flex";
       });
     });
+
+    // Function to format date as "Month Name, Day, Year"
+    function formatDate(date) {
+      const options = {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      };
+      return date.toLocaleDateString('en-US', options);
+    }
+
     closeBtn.onclick = () => modal.style.display = "none";
     window.onclick = e => { if (e.target === modal) modal.style.display = "none"; };
 
@@ -964,12 +991,12 @@ function getStatus($created_at)
     }
 
     // Sign-out functionality
-    document.addEventListener('click', function(e) {
+    document.addEventListener('click', function (e) {
       if (e.target.closest('.btn-signout')) {
         const button = e.target.closest('.btn-signout');
         const guestId = button.dataset.guestId;
         const visitorName = button.dataset.visitorName;
-        
+
         signOutGuest(guestId, visitorName, button);
       }
     });
@@ -999,16 +1026,16 @@ function getStatus($created_at)
           // Update the UI
           const row = buttonElement.closest('tr');
           const cells = row.cells;
-          
+
           // Update Time Out cell
           cells[7].innerHTML = result.time_out;
-          
+
           // Update Status cell
           cells[8].innerHTML = `
             <span class="status-badge signed-out">Signed Out</span>
             <div class="sign-out-time">${result.time_out}</div>
           `;
-          
+
           showNotification(`${visitorName} signed out successfully at ${result.time_out}`, 'success');
         } else {
           throw new Error(result.message);
@@ -1016,7 +1043,7 @@ function getStatus($created_at)
       } catch (error) {
         console.error('Sign-out error:', error);
         showNotification('Error signing out: ' + error.message, 'error');
-        
+
         // Reset button
         buttonElement.innerHTML = '<i class="fas fa-sign-out-alt"></i> Sign Out';
         buttonElement.disabled = false;

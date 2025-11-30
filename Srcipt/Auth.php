@@ -76,7 +76,9 @@ class Auth
                 $update_stmt->bind_param("i", $user['id']);
                 $update_stmt->execute();
 
+                // Log successful login
                 $this->logAttempt($username, 'SUCCESS');
+                $this->logActivity('LOGIN', 'User logged in successfully', $user['id']);
                 $this->clearRateLimit($username);
 
                 return ['success' => true, 'message' => 'Login successful!', 'role' => $user['role']];
@@ -106,32 +108,33 @@ class Auth
     }
 
     public function hasRole($requiredRole) {
-    if (!isset($_SESSION['role'])) {
+        if (!isset($_SESSION['role'])) {
+            return false;
+        }
+        
+        $userRole = $_SESSION['role'];
+        
+        // Role hierarchy: admin > security > receptionist
+        $roleHierarchy = [
+            'admin' => ['admin', 'security', 'receptionist'],
+            'security' => ['security', 'receptionist'],
+            'receptionist' => ['receptionist']
+        ];
+        
+        // Check if user's role has permission to access the required role
+        if (isset($roleHierarchy[$userRole])) {
+            return in_array($requiredRole, $roleHierarchy[$userRole]);
+        }
+        
         return false;
     }
-    
-    $userRole = $_SESSION['role'];
-    
-    // Role hierarchy: admin > security > receptionist
-    $roleHierarchy = [
-        'admin' => ['admin', 'security', 'receptionist'],
-        'security' => ['security', 'receptionist'],
-        'receptionist' => ['receptionist']
-    ];
-    
-    // Check if user's role has permission to access the required role
-    if (isset($roleHierarchy[$userRole])) {
-        return in_array($requiredRole, $roleHierarchy[$userRole]);
-    }
-    
-    return false;
-}
 
     public function logout()
     {
         // Log logout action
         if (isset($_SESSION['username'])) {
             $this->logAttempt($_SESSION['username'], 'LOGOUT');
+            $this->logActivity('LOGOUT', 'User logged out', $_SESSION['user_id']);
         }
 
         session_destroy();
@@ -173,6 +176,123 @@ class Auth
         } catch (Exception $e) {
             // Fallback to PHP error log
             error_log("Auth log error: " . $e->getMessage() . " - Entry: " . $logEntry);
+        }
+    }
+
+    /**
+     * Log user activity to database
+     */
+    public function logActivity($action, $description = '', $user_id = null) {
+        if (!$user_id && isset($_SESSION['user_id'])) {
+            $user_id = $_SESSION['user_id'];
+        }
+        
+        $user_agent = $_SERVER['HTTP_USER_AGENT'] ?? 'unknown';
+        
+        try {
+            $stmt = $this->db->prepare("INSERT INTO user_activity_logs (user_id, action, description, user_agent) VALUES (?, ?, ?, ?)");
+            if ($stmt) {
+                $stmt->bind_param("isss", $user_id, $action, $description, $user_agent);
+                $stmt->execute();
+            }
+        } catch (Exception $e) {
+            error_log("Activity log error: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Get user activity logs (for admin use)
+     */
+    public function getUserActivityLogs($filters = [], $limit = 50, $offset = 0) {
+        $sql = "SELECT ual.*, u.username, u.full_name 
+                FROM user_activity_logs ual 
+                LEFT JOIN users u ON ual.user_id = u.id 
+                WHERE 1=1";
+        $params = [];
+        $types = '';
+
+        // Add filters
+        if (!empty($filters['search'])) {
+            $sql .= " AND (u.username LIKE ? OR u.full_name LIKE ? OR ual.description LIKE ? OR ual.action LIKE ?)";
+            $search_param = "%{$filters['search']}%";
+            $params = array_fill(0, 4, $search_param);
+            $types = str_repeat('s', 4);
+        }
+
+        if (!empty($filters['action'])) {
+            $sql .= " AND ual.action = ?";
+            $params[] = &$filters['action'];
+            $types .= 's';
+        }
+
+        if (!empty($filters['user_id'])) {
+            $sql .= " AND ual.user_id = ?";
+            $params[] = &$filters['user_id'];
+            $types .= 'i';
+        }
+
+        $sql .= " ORDER BY ual.timestamp DESC LIMIT ? OFFSET ?";
+        $params[] = &$limit;
+        $params[] = &$offset;
+        $types .= 'ii';
+
+        try {
+            $stmt = $this->db->prepare($sql);
+            if (!empty($types)) {
+                $stmt->bind_param($types, ...$params);
+            }
+            $stmt->execute();
+            $result = $stmt->get_result();
+            return $result->fetch_all(MYSQLI_ASSOC);
+        } catch (Exception $e) {
+            error_log("Get user activity logs error: " . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Count user activity logs (for pagination)
+     */
+    public function countUserActivityLogs($filters = []) {
+        $sql = "SELECT COUNT(*) as total 
+                FROM user_activity_logs ual 
+                LEFT JOIN users u ON ual.user_id = u.id 
+                WHERE 1=1";
+        $params = [];
+        $types = '';
+
+        // Add filters
+        if (!empty($filters['search'])) {
+            $sql .= " AND (u.username LIKE ? OR u.full_name LIKE ? OR ual.description LIKE ? OR ual.action LIKE ?)";
+            $search_param = "%{$filters['search']}%";
+            $params = array_fill(0, 4, $search_param);
+            $types = str_repeat('s', 4);
+        }
+
+        if (!empty($filters['action'])) {
+            $sql .= " AND ual.action = ?";
+            $params[] = &$filters['action'];
+            $types .= 's';
+        }
+
+        if (!empty($filters['user_id'])) {
+            $sql .= " AND ual.user_id = ?";
+            $params[] = &$filters['user_id'];
+            $types .= 'i';
+        }
+
+        try {
+            $stmt = $this->db->prepare($sql);
+            if (!empty($types)) {
+                $stmt->bind_param($types, ...$params);
+            }
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $count = $result->fetch_assoc();
+            return $count['total'] ?? 0;
+        } catch (Exception $e) {
+            error_log("Count user activity logs error: " . $e->getMessage());
+            return 0;
         }
     }
 

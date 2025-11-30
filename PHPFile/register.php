@@ -75,45 +75,67 @@ include __DIR__ . '/../Srcipt/db_connect.php';
             <h1>RSU Security Management System</h1>
         </div>
         <div class="nav-right">
+            <div class="user-info">
+                <i class="fas fa-user-shield"></i>
+                <span class="user-name"><?= htmlspecialchars($_SESSION['full_name']) ?></span>
+                <span class="user-role badge"><?= htmlspecialchars($_SESSION['role']) ?></span>
+            </div>
             <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
-            <img src="../Assets/Settings.png" alt="Settings" class="settings-icon">
+            <div class="user-menu">
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
         </div>
     </header>
 
     <!-- ===== Unified Sidebar ===== -->
-<aside class="sidebar" id="sidebar">
-    <nav class="nav-links">
-        <a href="dashboard.php" class="<?= basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : '' ?>">
-            <i class="fas fa-chart-line"></i><span>Dashboard</span>
-        </a>
-        
-        <?php if ($auth->hasRole('admin')): ?>
-        <a href="database.php" class="<?= basename($_SERVER['PHP_SELF']) == 'database.php' ? 'active' : '' ?>">
-            <i class="fas fa-database"></i><span>Database</span>
-        </a>
-        <?php endif; ?>
-        
-        <a href="entrymonitor.php" class="<?= basename($_SERVER['PHP_SELF']) == 'entrymonitor.php' ? 'active' : '' ?>">
-            <i class="fas fa-id-card"></i><span>Entry Monitor</span>
-        </a>
-        
-        <?php if ($auth->hasRole('admin')): ?>
-        <a href="logs.php" class="<?= basename($_SERVER['PHP_SELF']) == 'logs.php' ? 'active' : '' ?>">
-            <i class="fas fa-clipboard-list"></i><span>Logs</span>
-        </a>
-        <?php endif; ?>
-        
-        <a href="register.php" class="<?= basename($_SERVER['PHP_SELF']) == 'register.php' ? 'active' : '' ?>">
-            <i class="fas fa-user-plus"></i><span>Register Guest</span>
-        </a>
-        
-        <?php if ($auth->hasRole('admin') || $auth->hasRole('security')): ?>
-        <a href="control_panel.php" class="<?= basename($_SERVER['PHP_SELF']) == 'control_panel.php' ? 'active' : '' ?>">
-            <i class="fas fa-cogs"></i><span>Control Panel</span>
-        </a>
-        <?php endif; ?>
-    </nav>
-</aside>
+    <aside class="sidebar" id="sidebar">
+        <nav class="nav-links">
+            <a href="dashboard.php" class="<?= basename($_SERVER['PHP_SELF']) == 'dashboard.php' ? 'active' : '' ?>">
+                <i class="fas fa-chart-line"></i><span>Dashboard</span>
+            </a>
+
+            <?php if ($auth->hasRole('admin')): ?>
+                <a href="database.php" class="<?= basename($_SERVER['PHP_SELF']) == 'database.php' ? 'active' : '' ?>">
+                    <i class="fas fa-database"></i><span>Database</span>
+                </a>
+            <?php endif; ?>
+
+            <a href="entrymonitor.php"
+                class="<?= basename($_SERVER['PHP_SELF']) == 'entrymonitor.php' ? 'active' : '' ?>">
+                <i class="fas fa-id-card"></i><span>Entry Monitor</span>
+            </a>
+
+            <?php if ($auth->hasRole('admin')): ?>
+                <a href="logs.php" class="<?= basename($_SERVER['PHP_SELF']) == 'logs.php' ? 'active' : '' ?>">
+                    <i class="fas fa-clipboard-list"></i><span>RFID Logs</span>
+                </a>
+            <?php endif; ?>
+
+            <a href="register.php" class="<?= basename($_SERVER['PHP_SELF']) == 'register.php' ? 'active' : '' ?>">
+                <i class="fas fa-user-plus"></i><span>Register Guest</span>
+            </a>
+
+            <?php if ($auth->hasRole('admin') || $auth->hasRole('security')): ?>
+                <a href="control_panel.php"
+                    class="<?= basename($_SERVER['PHP_SELF']) == 'control_panel.php' ? 'active' : '' ?>">
+                    <i class="fas fa-cogs"></i><span>Control Panel</span>
+                </a>
+            <?php endif; ?>
+
+            <!-- User Management Links -->
+            <?php if ($auth->hasRole('admin')): ?>
+                <a href="user_management.php"
+                    class="<?= basename($_SERVER['PHP_SELF']) == 'user_management.php' ? 'active' : '' ?>">
+                    <i class="fas fa-users-cog"></i><span>User Management</span>
+                </a>
+                <a href="user_logs.php" class="<?= basename($_SERVER['PHP_SELF']) == 'user_logs.php' ? 'active' : '' ?>">
+                    <i class="fas fa-history"></i><span>User Activity Logs</span>
+                </a>
+            <?php endif; ?>
+        </nav>
+    </aside>
 
     <!-- ===== Main Content ===== -->
     <main class="main-content" id="mainContent">
@@ -224,9 +246,10 @@ include __DIR__ . '/../Srcipt/db_connect.php';
                             <input type="checkbox" id="privacyConsent" name="privacyConsent" required>
                             <div class="privacy-text-simple">
                                 <strong>Data Privacy Act of 2012 (RA 10173) Consent</strong><br>
-                                I agree to the collection and processing of my personal data in accordance with 
-                                the Philippine Data Privacy Act. 
-                                <a href="https://privacy.gov.ph/data-privacy-act/" target="_blank" class="privacy-link-simple">
+                                I agree to the collection and processing of my personal data in accordance with
+                                the Philippine Data Privacy Act.
+                                <a href="https://privacy.gov.ph/data-privacy-act/" target="_blank"
+                                    class="privacy-link-simple">
                                     View Data Privacy Act
                                 </a>
                                 <span class="required-star">*</span>
@@ -322,7 +345,7 @@ include __DIR__ . '/../Srcipt/db_connect.php';
         });
 
         // Privacy consent validation
-        document.getElementById('privacyConsent').addEventListener('change', function() {
+        document.getElementById('privacyConsent').addEventListener('change', function () {
             validatePrivacyConsent();
         });
 
@@ -557,7 +580,7 @@ include __DIR__ . '/../Srcipt/db_connect.php';
         function validatePrivacyConsent() {
             const checkbox = document.getElementById('privacyConsent');
             const validationElement = document.getElementById('privacyConsentValidation');
-            
+
             if (!checkbox.checked) {
                 validationElement.textContent = 'You must agree to the Data Privacy Act to continue';
                 validationElement.className = 'validation-message error';

@@ -10,6 +10,8 @@ import java.sql.*;
 import org.json.JSONObject;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 public class RFIDListener {
     private static final String PORT_NAME = "COM10";
@@ -18,6 +20,7 @@ public class RFIDListener {
     private static final String DB_USER = "root";
     private static final String DB_PASS = "";
     private static final int CONTROL_PORT = 9090;
+    private static final int VALIDITY_MONTHS = 6; // 6 months validity
 
     private static Connection dbConnection;
     private static SerialPort serialPort;
@@ -170,11 +173,14 @@ public class RFIDListener {
                 String role = rs.getString("role");
                 int rfid_id = rs.getInt("rfid_id");
                 String name = "", department = "", idNumber = "", photo = "";
+                boolean isValid = true;
+                String validityStatus = "Valid";
 
+                // Check validity based on role
                 if (role.equals("student")) {
                     String studentQuery = """
                                 SELECT s.student_id, s.first_name, s.middle_name, s.last_name,
-                                       s.course AS department, s.photo
+                                       s.course AS department, s.photo, s.created_at
                                 FROM rfid_student_info rsi
                                 JOIN student s ON s.student_id = rsi.student_id
                                 WHERE rsi.rfid_id = ?
@@ -189,11 +195,27 @@ public class RFIDListener {
                                 studentRs.getString("last_name"));
                         department = studentRs.getString("department");
                         photo = studentRs.getString("photo");
+                        
+                        // Check student validity using created_at
+                        Date createdAt = studentRs.getDate("created_at");
+                        if (createdAt != null) {
+                            isValid = checkValidity(createdAt);
+                            if (!isValid) {
+                                validityStatus = "Expired - Student ID older than " + VALIDITY_MONTHS + " months";
+                            }
+                        }
+                        
+                        System.out.println("✅ STUDENT DATA RETRIEVED SUCCESSFULLY:");
+                        System.out.println("   Student ID: " + idNumber);
+                        System.out.println("   Name: " + name);
+                        System.out.println("   Department: " + department);
+                        System.out.println("   Created At: " + createdAt);
+                        System.out.println("   Validity: " + (isValid ? "Valid" : "Expired"));
                     }
                 } else if (role.equals("employee")) {
                     String employeeQuery = """
                                 SELECT e.employee_id, e.first_name, e.middle_name, e.last_name,
-                                       e.department, e.photo
+                                       e.department, e.photo, e.hire_date
                                 FROM rfid_employee_info rei
                                 JOIN employee e ON e.employee_id = rei.employee_id
                                 WHERE rei.rfid_id = ?
@@ -208,6 +230,141 @@ public class RFIDListener {
                                 employeeRs.getString("last_name"));
                         department = employeeRs.getString("department");
                         photo = employeeRs.getString("photo");
+                        
+                        // Check employee validity
+                        Date hireDate = employeeRs.getDate("hire_date");
+                        if (hireDate != null) {
+                            isValid = checkValidity(hireDate);
+                            if (!isValid) {
+                                validityStatus = "Expired - Employment older than " + VALIDITY_MONTHS + " months";
+                            }
+                        }
+                    }
+                } else if (role.equals("guest")) {
+                    // PROPER GUEST HANDLING: Use rfid_assignments table
+                    String guestQuery = """
+                                SELECT g.guest_id, g.first_name, g.middle_name, g.last_name,
+                                       g.office, g.photo, g.person_to_visit, g.status,
+                                       ra.assigned_at
+                                FROM guest g
+                                JOIN rfid_assignments ra ON g.guest_id = ra.guest_id
+                                WHERE g.status = 'checked_in' 
+                                AND ra.rfid_number = ?
+                                AND ra.released_at IS NULL
+                                AND ra.is_active = true
+                            """;
+                    PreparedStatement ps = dbConnection.prepareStatement(guestQuery);
+                    ps.setString(1, rfidUid);
+                    ResultSet guestRs = ps.executeQuery();
+                    
+                    System.out.println("🔍 Executing guest query for RFID: " + rfidUid);
+                    
+                    if (guestRs.next()) {
+                        idNumber = "G" + guestRs.getString("guest_id");
+                        name = formatName(guestRs.getString("first_name"),
+                                guestRs.getString("middle_name"),
+                                guestRs.getString("last_name"));
+                        department = "Guest - Visiting: " + guestRs.getString("person_to_visit");
+                        photo = guestRs.getString("photo");
+                        
+                        // Check guest validity
+                        Date assignedAt = guestRs.getDate("assigned_at");
+                        if (assignedAt != null) {
+                            isValid = checkValidity(assignedAt);
+                            if (!isValid) {
+                                validityStatus = "Expired - Guest assignment older than " + VALIDITY_MONTHS + " months";
+                            }
+                        }
+                        
+                        System.out.println("✅ GUEST DATA RETRIEVED SUCCESSFULLY:");
+                        System.out.println("   Guest ID: " + guestRs.getString("guest_id"));
+                        System.out.println("   Name: " + name);
+                        System.out.println("   Visiting: " + guestRs.getString("person_to_visit"));
+                        System.out.println("   Office: " + guestRs.getString("office"));
+                        System.out.println("   Status: " + guestRs.getString("status"));
+                        System.out.println("   Photo: " + (photo != null && !photo.isEmpty() ? "exists" : "not available"));
+                        System.out.println("   Validity: " + (isValid ? "Valid" : "Expired"));
+                        
+                    } else {
+                        System.out.println("❌ GUEST QUERY RETURNED NO RESULTS - CHECKING DATA MISMATCH");
+                        
+                        // Debug: Check if there's a data type mismatch
+                        String debugQuery = "SELECT rfid_number, guest_id FROM rfid_assignments WHERE rfid_number = ?";
+                        PreparedStatement debugStmt = dbConnection.prepareStatement(debugQuery);
+                        debugStmt.setString(1, rfidUid);
+                        ResultSet debugRs = debugStmt.executeQuery();
+                        
+                        if (debugRs.next()) {
+                            String storedRfid = debugRs.getString("rfid_number");
+                            String storedGuestId = debugRs.getString("guest_id");
+                            System.out.println("   🔍 FOUND IN rfid_assignments:");
+                            System.out.println("      Stored RFID: '" + storedRfid + "'");
+                            System.out.println("      Searching for: '" + rfidUid + "'");
+                            System.out.println("      Stored Guest ID: " + storedGuestId);
+                            System.out.println("      Exact match: " + storedRfid.equals(rfidUid));
+                            
+                            // Check the guest separately
+                            String guestCheck = "SELECT first_name, last_name, status FROM guest WHERE guest_id = ?";
+                            PreparedStatement guestCheckStmt = dbConnection.prepareStatement(guestCheck);
+                            guestCheckStmt.setString(1, storedGuestId);
+                            ResultSet guestCheckRs = guestCheckStmt.executeQuery();
+                            
+                            if (guestCheckRs.next()) {
+                                System.out.println("   🔍 GUEST EXISTS:");
+                                System.out.println("      Name: " + guestCheckRs.getString("first_name") + " " + guestCheckRs.getString("last_name"));
+                                System.out.println("      Status: " + guestCheckRs.getString("status"));
+                            }
+                        }
+                        
+                        // Fallback: Try alternative query approach
+                        System.out.println("🔄 TRYING ALTERNATIVE QUERY...");
+                        String altQuery = """
+                                SELECT g.guest_id, g.first_name, g.middle_name, g.last_name,
+                                       g.office, g.photo, g.person_to_visit, g.status,
+                                       ra.assigned_at
+                                FROM rfid_assignments ra
+                                JOIN guest g ON ra.guest_id = g.guest_id
+                                WHERE ra.rfid_number = ?
+                                AND g.status = 'checked_in'
+                                AND ra.released_at IS NULL
+                            """;
+                        PreparedStatement altStmt = dbConnection.prepareStatement(altQuery);
+                        altStmt.setString(1, rfidUid);
+                        ResultSet altRs = altStmt.executeQuery();
+                        
+                        if (altRs.next()) {
+                            System.out.println("✅ ALTERNATIVE QUERY WORKED!");
+                            idNumber = "G" + altRs.getString("guest_id");
+                            name = formatName(altRs.getString("first_name"),
+                                    altRs.getString("middle_name"),
+                                    altRs.getString("last_name"));
+                            department = "Guest - Visiting: " + altRs.getString("person_to_visit");
+                            photo = altRs.getString("photo");
+                            
+                            // Check guest validity for alternative query result
+                            Date assignedAt = altRs.getDate("assigned_at");
+                            if (assignedAt != null) {
+                                isValid = checkValidity(assignedAt);
+                                if (!isValid) {
+                                    validityStatus = "Expired - Guest assignment older than " + VALIDITY_MONTHS + " months";
+                                }
+                            }
+                        } else {
+                            System.out.println("❌ ALTERNATIVE QUERY ALSO FAILED");
+                            details.put("id_number", "NO_GUEST");
+                            details.put("name", "No Active Guest");
+                            details.put("course_or_department", "Guest Card Not Assigned");
+                            details.put("role", "guest");
+                            details.put("photo", "");
+                            details.put("status", "Access Denied - No Guest");
+
+                            response.put("status", "Access Denied");
+                            response.put("details", details);
+                            sendGateCommand("Access Denied\n");
+                            logAccess(rfidUid, "guest", "Access Denied - No Guest", "NO_GUEST", "No Active Guest");
+                            sendToPHP("NO_GUEST", "No Active Guest", "Guest Card Not Assigned", "guest", "Access Denied - No Guest", "");
+                            return;
+                        }
                     }
                 }
 
@@ -222,19 +379,31 @@ public class RFIDListener {
                 details.put("course_or_department", department);
                 details.put("role", role);
                 details.put("photo", photo != null ? photo : "");
-                details.put("status", "Access Granted");
-
-                // Send to Arduino - RFID OPEN (5 seconds auto-close)
-                response.put("status", "Access Granted");
-                response.put("details", details);
-                System.out.println("✅ Access Granted: " + response.toString(2));
-                sendGateCommand("Access Granted\n"); // RFID command - 5 seconds auto-close
-
-                // Log the access to database
-                logAccess(rfidUid, role, "Access Granted", idNumber, name.trim());
-
-                // Send to PHP with photo
-                sendToPHP(idNumber, name.trim(), department, role, "Access Granted", photo);
+                
+                // Set access status based on validity check
+                if (isValid) {
+                    details.put("status", "Access Granted");
+                    response.put("status", "Access Granted");
+                    System.out.println("✅ Access Granted: " + response.toString(2));
+                    sendGateCommand("Access Granted\n"); // RFID command - 5 seconds auto-close
+                    
+                    // Log the access to database
+                    logAccess(rfidUid, role, "Access Granted", idNumber, name.trim());
+                    
+                    // Send to PHP with photo
+                    sendToPHP(idNumber, name.trim(), department, role, "Access Granted", photo);
+                } else {
+                    details.put("status", validityStatus);
+                    response.put("status", "Access Denied");
+                    System.out.println("❌ Access Denied - ID Expired: " + validityStatus);
+                    sendGateCommand("Access Denied\n");
+                    
+                    // Log the denied access to database
+                    logAccess(rfidUid, role, validityStatus, idNumber, name.trim());
+                    
+                    // Send to PHP with expired status
+                    sendToPHP(idNumber, name.trim(), department, role, validityStatus, photo);
+                }
 
             } else {
                 // Unknown RFID - Access Denied
@@ -261,6 +430,34 @@ public class RFIDListener {
         } catch (Exception e) {
             System.err.println("❌ Error processing RFID scan: " + e.getMessage());
             e.printStackTrace();
+        }
+    }
+
+    // ===== VALIDITY CHECK METHOD =====
+    private static boolean checkValidity(Date startDate) {
+        try {
+            if (startDate == null) {
+                return true; // If no date is set, consider it valid
+            }
+            
+            // Convert java.sql.Date to LocalDate
+            LocalDate startLocalDate = startDate.toLocalDate();
+            LocalDate currentDate = LocalDate.now();
+            
+            // Calculate months between dates
+            long monthsBetween = ChronoUnit.MONTHS.between(startLocalDate, currentDate);
+            
+            System.out.println("📅 Validity Check:");
+            System.out.println("   Start Date: " + startLocalDate);
+            System.out.println("   Current Date: " + currentDate);
+            System.out.println("   Months Passed: " + monthsBetween);
+            System.out.println("   Validity Period: " + VALIDITY_MONTHS + " months");
+            System.out.println("   Is Valid: " + (monthsBetween <= VALIDITY_MONTHS));
+            
+            return monthsBetween <= VALIDITY_MONTHS;
+        } catch (Exception e) {
+            System.err.println("❌ Error checking validity: " + e.getMessage());
+            return true; // In case of error, allow access
         }
     }
 
