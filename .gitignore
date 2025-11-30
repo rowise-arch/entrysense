@@ -2,3 +2,4 @@ PHPFile/logs.php
 data/last_entry.json
 data/last_entry.json
 data/last_entry.json
+logs/auth.log

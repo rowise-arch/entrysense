@@ -308,6 +308,13 @@ include __DIR__ . '/../Srcipt/db_connect.php';
         toggle.addEventListener('click', () => {
             sidebar.classList.toggle('active');
         });
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = 'logout.php';
+            }
+        }
     </script>
 
     <!-- Camera and Form Script -->

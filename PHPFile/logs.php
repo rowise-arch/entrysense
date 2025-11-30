@@ -425,6 +425,13 @@ $totalLogs = $stats['total'] ?? 0;
             sidebar.classList.toggle('active');
         });
 
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = 'logout.php';
+            }
+        }
+
         // Filter functions
         function applyFilters() {
             document.getElementById('filterForm').submit();

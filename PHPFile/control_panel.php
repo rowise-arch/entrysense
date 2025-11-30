@@ -260,6 +260,13 @@ if (function_exists('shell_exec')) {
         toggle.addEventListener('click', () => {
             sidebar.classList.toggle('active');
         });
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = 'logout.php';
+            }
+        }
     </script>
 
     <!-- Control Panel JavaScript -->

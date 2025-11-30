@@ -40,7 +40,7 @@ $id_number = "";
         <span class="user-name"><?= htmlspecialchars($_SESSION['full_name']) ?></span>
         <span class="user-role badge"><?= htmlspecialchars($_SESSION['role']) ?></span>
       </div>
-      <!-- <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button> -->
+      <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
       <div class="user-menu">
         <button class="logout-btn" onclick="logout()">
           <i class="fas fa-sign-out-alt"></i> Logout
