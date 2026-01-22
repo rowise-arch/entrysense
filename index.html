@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="Style/global.css">
     <link rel="stylesheet" href="Style/splash.css">
+    <link rel="manifest" href="/manifest.json">
 </head>
 <body>
     <!-- Background Overlay -->
@@ -88,5 +89,12 @@
 
     <!-- JavaScript -->
     <script src="Srcipt/splash.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js');
+            });
+        }
+    </script>
 </body>
 </html>
